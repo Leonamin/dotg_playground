@@ -1,3 +1,5 @@
+import 'package:dotg_playground/1_view/looping_page_view.dart';
+import 'package:dotg_playground/3_util/navigator_helper.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatelessWidget {
@@ -9,10 +11,18 @@ class HomeView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('땃쥐 놀이터'),
       ),
-      body: const Center(
-        child: Text(
-          '땃쥐 놀이터에 오신 것을 환영합니다!',
-        ),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              NavigatorHelper.push(
+                context,
+                const LoopPageView('asd'),
+              );
+            },
+            child: const Text('Looping Page View'),
+          ),
+        ],
       ),
     );
   }
