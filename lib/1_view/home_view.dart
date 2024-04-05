@@ -1,4 +1,6 @@
+import 'package:dotg_playground/1_view/fuse_view.dart';
 import 'package:dotg_playground/1_view/looping_page_view.dart';
+import 'package:dotg_playground/1_view/quill_view.dart';
 import 'package:dotg_playground/1_view/round_test_view.dart';
 import 'package:dotg_playground/3_util/navigator_helper.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,24 @@ class HomeView extends StatelessWidget {
               );
             },
             child: const Text('Round Test View'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              NavigatorHelper.push(
+                context,
+                const FuseView(),
+              );
+            },
+            child: const Text('Fuse View'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              NavigatorHelper.push(
+                context,
+                QuillView(),
+              );
+            },
+            child: const Text('Quill View'),
           ),
         ],
       ),
