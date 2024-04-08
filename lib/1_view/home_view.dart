@@ -2,6 +2,7 @@ import 'package:dotg_playground/1_view/fuse_view.dart';
 import 'package:dotg_playground/1_view/looping_page_view.dart';
 import 'package:dotg_playground/1_view/quill_view.dart';
 import 'package:dotg_playground/1_view/round_test_view.dart';
+import 'package:dotg_playground/1_view/tab_indicator_view.dart';
 import 'package:dotg_playground/3_util/navigator_helper.dart';
 import 'package:flutter/material.dart';
 
@@ -51,6 +52,15 @@ class HomeView extends StatelessWidget {
               );
             },
             child: const Text('Quill View'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              NavigatorHelper.push(
+                context,
+                const TabIndicatorView(),
+              );
+            },
+            child: const Text('TabIndicator View'),
           ),
         ],
       ),
