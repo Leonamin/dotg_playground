@@ -5,7 +5,7 @@ import 'package:dotg_playground/1_view/quill_view.dart';
 import 'package:dotg_playground/1_view/round_test_view.dart';
 import 'package:dotg_playground/1_view/run_js_view.dart';
 import 'package:dotg_playground/1_view/tab_indicator_view.dart';
-import 'package:dotg_playground/1_view/youtube_link_view.dart';
+import 'package:dotg_playground/1_view/video_view/youtube_link_view.dart';
 import 'package:dotg_playground/3_util/navigator_helper.dart';
 import 'package:flutter/material.dart';
 

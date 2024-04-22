@@ -41,6 +41,8 @@ dependencies:
   webview_flutter: ^4.7.0
   flutter_windowmanager: ^0.2.0
   youtube_player_flutter: ^9.0.1
+  logger: ^2.2.0
+  flutter_inappwebview: ^6.0.0
 
 dev_dependencies:
   flutter_test:
