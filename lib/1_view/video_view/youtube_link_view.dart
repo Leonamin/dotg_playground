@@ -79,6 +79,15 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   bool _isFullScreen = false;
 
+  double dragStartPos = 0.0;
+  double lastDragPostion = 0.0;
+  // initstate에서 초기화
+  double closeThreshold = 70.0;
+
+  double dragRange = 0.0;
+
+  double videoPostion = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -94,6 +103,13 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
     );
 
     OrientationUtil.enableOrientationAll();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    closeThreshold = MediaQuery.of(context).size.height / 3;
   }
 
   /// 현재화면에서 앱 밖으로 나갔을 때, 시스템 UI가 보이도록 설정
@@ -142,17 +158,32 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
         },
         child: GestureDetector(
           onTap: _onTapBackground,
+          onVerticalDragStart: _onVerticalDragStart,
+          onVerticalDragUpdate: _onVerticalDragUpdate,
+          onVerticalDragCancel: _onVerticalDragCancel,
+          onVerticalDragEnd: _onVerticalDragEnd,
           child: Scaffold(
             extendBodyBehindAppBar: true,
             appBar: _isFullScreen ? null : appBar,
             backgroundColor: Colors.black,
-            body: Center(
-              child: _VideoContent(
-                vc: _vc,
-                ratio: _getRatio(_isFullScreen),
-                isFullScreen: _isFullScreen,
-                onTapFullScreen: _onTapFullScreen,
-              ),
+            body: Stack(
+              children: [
+                Positioned(
+                  top: videoPostion,
+                  child: SizeFactorBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    child: Center(
+                      child: _VideoContent(
+                        vc: _vc,
+                        ratio: _getRatio(_isFullScreen),
+                        isFullScreen: _isFullScreen,
+                        onTapFullScreen: _onTapFullScreen,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -212,6 +243,87 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.immersiveSticky,
       overlays: [],
+    );
+  }
+
+  void _onVerticalDragStart(DragStartDetails details) {
+    if (!_isFullScreen) return;
+    dragStartPos = details.globalPosition.dy;
+  }
+
+  void _onVerticalDragUpdate(DragUpdateDetails details) {
+    if (!_isFullScreen) return;
+
+    setState(() {
+      dragRange = details.globalPosition.dy - dragStartPos;
+
+      if (dragRange > closeThreshold) {
+        videoPostion = closeThreshold;
+      } else if (dragRange < 0) {
+        videoPostion = 0;
+      } else {
+        videoPostion = dragRange;
+      }
+    });
+  }
+
+  void _onVerticalDragCancel() {
+    _resetDrag();
+  }
+
+  void _onVerticalDragEnd(DragEndDetails details) {
+    if (_isFullScreen) {
+      if (dragRange > closeThreshold) {
+        _setPortrait();
+      }
+    }
+
+    _resetDrag();
+  }
+
+  void _resetDrag() {
+    setState(() {
+      dragStartPos = 0;
+      dragRange = 0;
+      videoPostion = 0;
+    });
+  }
+}
+
+class SizeFactorBox extends StatelessWidget {
+  // min 0.0 max 1.0
+  final double? heightSizeFactor;
+  final double? widthSizeFactor;
+  final double? height;
+  final double? width;
+  final Widget child;
+
+  const SizeFactorBox({
+    super.key,
+    this.heightSizeFactor,
+    this.widthSizeFactor,
+    this.height,
+    this.width,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = heightSizeFactor != null
+            ? constraints.maxHeight * heightSizeFactor!
+            : this.height;
+        final width = widthSizeFactor != null
+            ? constraints.maxWidth * widthSizeFactor!
+            : this.width;
+
+        return SizedBox(
+          height: height,
+          width: width,
+          child: child,
+        );
+      },
     );
   }
 }
