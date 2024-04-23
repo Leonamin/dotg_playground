@@ -1,6 +1,15 @@
 import 'package:flutter/services.dart';
 
-class DeviceOrientationUtil {
+class OrientationUtil {
+  static void enableOrientationAll() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
   static void setPortrait() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,

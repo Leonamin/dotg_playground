@@ -1,90 +1,160 @@
-import 'package:dotg_playground/1_view/video_view/device_orientation_util.dart';
-import 'package:dotg_playground/3_util/shrew_logger.dart';
+import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-class YoutubeLinkView extends StatefulWidget {
-  const YoutubeLinkView({super.key});
+class ImfineYoutubeThumbnailView extends StatelessWidget {
+  final String videoUrl;
+  final BuildContext context;
+  final Function(String videoUrl)? onTapThumbnail;
+
+  const ImfineYoutubeThumbnailView({
+    super.key,
+    required this.videoUrl,
+    required this.context,
+    this.onTapThumbnail,
+  });
+
+  String get _videoId => YoutubePlayer.convertUrlToId(videoUrl) ?? '';
 
   @override
-  State<YoutubeLinkView> createState() => _YoutubeLinkViewState();
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onTapThumbnail?.call(videoUrl),
+      child: Stack(
+        children: [
+          Image.network(
+            YoutubePlayer.getThumbnail(
+              videoId: _videoId,
+            ),
+            fit: BoxFit.cover,
+            loadingBuilder: (_, child, progress) =>
+                progress == null ? child : Container(color: Colors.black),
+            errorBuilder: (context, _, __) => Image.network(
+              YoutubePlayer.getThumbnail(
+                videoId: _videoId,
+                webp: false,
+              ),
+              fit: BoxFit.cover,
+              loadingBuilder: (_, child, progress) =>
+                  progress == null ? child : Container(color: Colors.black),
+              errorBuilder: (context, _, __) => Container(color: Colors.black),
+            ),
+          ),
+          const Positioned.fill(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Center(
+              child: Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 60.0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _YoutubeLinkViewState extends State<YoutubeLinkView> {
-  final GlobalKey _youtubeKey = GlobalKey();
+class ImfineYoutubePlayerView extends StatefulWidget {
+  final String videoUrl;
+
+  const ImfineYoutubePlayerView({
+    super.key,
+    required this.videoUrl,
+  });
+
+  @override
+  State<ImfineYoutubePlayerView> createState() =>
+      _ImfineYoutubePlayerViewState();
+}
+
+class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
+    with WidgetsBindingObserver {
   late YoutubePlayerController _vc;
 
-  double _ratio = 16 / 9;
-
   bool _isFullScreen = false;
-
-  Duration _lastPosition = Duration.zero;
 
   @override
   void initState() {
     super.initState();
 
-    final videoId = YoutubePlayer.convertUrlToId(
-        'https://youtu.be/fD8Yj4kNh50?list=RDfD8Yj4kNh50');
+    final videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
 
     _vc = YoutubePlayerController(
-      initialVideoId: videoId ?? 'iLnmTe5Q2Qw',
-      flags: YoutubePlayerFlags(
+      initialVideoId: videoId ?? '',
+      flags: const YoutubePlayerFlags(
         autoPlay: false,
         mute: false,
       ),
     );
+
+    OrientationUtil.enableOrientationAll();
+  }
+
+  /// 현재화면에서 앱 밖으로 나갔을 때, 시스템 UI가 보이도록 설정
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _hideSystemUi();
+        if (_isFullScreen) {
+          _setLandscape();
+        } else {
+          _setPortrait();
+        }
+        break;
+      case AppLifecycleState.paused:
+        _showSystemUi();
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('사실 다시 빌드하기 때문에 의미 없어!');
-    final videoWidget = _buildYoutube(ratio: _getRatio(_isFullScreen));
+    _hideSystemUi();
+
+    final appBar = AppBar(
+      backgroundColor: Colors.black,
+    );
 
     return OrientationBuilder(builder: (context, orientation) {
-      final isPortrait = orientation == Orientation.portrait;
       final isLandScape = orientation == Orientation.landscape;
 
-      // if (isLandScape) {
-      //   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      // } else {
-      //   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      // }
+      _isFullScreen = isLandScape;
+
       return PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
-          print('DOTG 나가자!, $didPop');
-          if (isLandScape) {
+          if (_isFullScreen) {
             _setPortrait();
-            _isFullScreen = false;
           } else {
             Navigator.of(context).pop();
           }
         },
-        child: Scaffold(
-          appBar: isPortrait ? AppBar() : null,
-          body: _isFullScreen
-              ? _VideoContent(
-                  key: _youtubeKey,
-                  vc: _vc,
-                  ratio: _ratio,
-                  isFullScreen: _isFullScreen,
-                  onTapFullScreen: _onTapFullScreen,
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _VideoContent(
-                        key: _youtubeKey,
-                        vc: _vc,
-                        ratio: _ratio,
-                        isFullScreen: _isFullScreen,
-                        onTapFullScreen: _onTapFullScreen,
-                      )
-                    ],
-                  ),
-                ),
+        child: GestureDetector(
+          onTap: _onTapBackground,
+          child: Scaffold(
+            extendBodyBehindAppBar: true,
+            appBar: _isFullScreen ? null : appBar,
+            backgroundColor: Colors.black,
+            body: Center(
+              child: _VideoContent(
+                vc: _vc,
+                ratio: _getRatio(_isFullScreen),
+                isFullScreen: _isFullScreen,
+                onTapFullScreen: _onTapFullScreen,
+              ),
+            ),
+          ),
         ),
       );
     });
@@ -93,76 +163,32 @@ class _YoutubeLinkViewState extends State<YoutubeLinkView> {
   @override
   void dispose() {
     _setPortrait();
+    _showSystemUi();
     super.dispose();
   }
 
   void _setPortrait() {
-    DeviceOrientationUtil.setPortrait();
+    OrientationUtil.setPortrait();
   }
 
   void _setLandscape() {
-    DeviceOrientationUtil.setLandscape();
+    OrientationUtil.setLandscape();
   }
-
-  Widget _buildYoutube({
-    required double ratio,
-  }) {
-    SLogger.debug(
-      'DOTG 마지막 포지션, ${_vc.value.position}',
-    );
-    return YoutubePlayer(
-      key: _youtubeKey,
-      controller: _vc,
-      aspectRatio: ratio,
-      showVideoProgressIndicator: true,
-      progressIndicatorColor: Colors.amber,
-      progressColors: const ProgressBarColors(
-        playedColor: Colors.amber,
-        handleColor: Colors.amberAccent,
-      ),
-      onReady: () {
-        _vc.addListener(_onReadyListener);
-      },
-      bottomActions: [
-        const SizedBox(width: 14.0),
-        CurrentPosition(),
-        const SizedBox(width: 8.0),
-        ProgressBar(
-          isExpanded: true,
-          colors: ProgressBarColors(
-            playedColor: Colors.amber,
-            handleColor: Colors.amberAccent,
-          ),
-        ),
-        RemainingDuration(),
-        const PlaybackSpeedButton(),
-        _FullScreenButton(
-          isFullScreen: _isFullScreen,
-          onTap: _onTapFullScreen,
-        ),
-      ],
-    );
-  }
-
-  void _onReadyListener() {}
 
   void _onTapFullScreen() {
-    _isFullScreen = !_isFullScreen;
-    _lastPosition = _vc.value.position;
-    setState(() {});
     if (_isFullScreen) {
-      _setLandscape();
-      Future.delayed(const Duration(milliseconds: 2500), () {
-        _vc.play();
-      });
-    } else {
       _setPortrait();
+    } else {
+      _setLandscape();
+    }
+  }
 
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
-        Future.delayed(const Duration(milliseconds: 2500), () {
-          _vc.play();
-        });
-      });
+  /// 영상의 재생바, 재생버튼 등을 보여주려는 용도
+  void _onTapBackground() {
+    if (_vc.value.isControlsVisible) {
+      _vc.updateValue(_vc.value.copyWith(isControlsVisible: false));
+    } else {
+      _vc.updateValue(_vc.value.copyWith(isControlsVisible: true));
     }
   }
 
@@ -174,6 +200,20 @@ class _YoutubeLinkViewState extends State<YoutubeLinkView> {
       return 16 / 9;
     }
   }
+
+  void _showSystemUi() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+  }
+
+  void _hideSystemUi() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
+  }
 }
 
 class _VideoContent extends StatelessWidget {
@@ -182,12 +222,14 @@ class _VideoContent extends StatelessWidget {
   final bool isFullScreen;
   final VoidCallback onTapFullScreen;
 
+  final Color? progressIndicatorColor;
+
   const _VideoContent({
-    super.key,
     required this.vc,
     required this.ratio,
     required this.isFullScreen,
     required this.onTapFullScreen,
+    this.progressIndicatorColor,
   });
 
   @override
@@ -197,12 +239,12 @@ class _VideoContent extends StatelessWidget {
       controller: vc,
       aspectRatio: ratio,
       showVideoProgressIndicator: true,
-      progressIndicatorColor: Colors.amber,
-      progressColors: const ProgressBarColors(
-        playedColor: Colors.amber,
-        handleColor: Colors.amberAccent,
+      progressIndicatorColor: progressIndicatorColor ?? Colors.blue,
+      progressColors: ProgressBarColors(
+        playedColor: progressIndicatorColor ?? Colors.blue,
+        handleColor: progressIndicatorColor ?? Colors.blue,
+        backgroundColor: Colors.black12,
       ),
-      onReady: () {},
       bottomActions: [
         const SizedBox(width: 14.0),
         CurrentPosition(),
@@ -210,8 +252,9 @@ class _VideoContent extends StatelessWidget {
         ProgressBar(
           isExpanded: true,
           colors: ProgressBarColors(
-            playedColor: Colors.amber,
-            handleColor: Colors.amberAccent,
+            playedColor: progressIndicatorColor ?? Colors.blue,
+            handleColor: progressIndicatorColor ?? Colors.blue,
+            backgroundColor: Colors.black12,
           ),
         ),
         RemainingDuration(),
@@ -231,7 +274,6 @@ class _FullScreenButton extends StatelessWidget {
   final Color? color;
 
   const _FullScreenButton({
-    super.key,
     required this.isFullScreen,
     this.color,
     this.onTap,
@@ -242,7 +284,7 @@ class _FullScreenButton extends StatelessWidget {
     return IconButton(
       icon: Icon(
         isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
-        color: color,
+        color: color ?? Colors.white,
       ),
       onPressed: onTap,
     );
