@@ -1,3 +1,4 @@
+import 'package:dotg_playground/1_view/video_view/drag_action_widget.dart';
 import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -79,15 +80,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   bool _isFullScreen = false;
 
-  double dragStartPos = 0.0;
-  double lastDragPostion = 0.0;
-  // initstate에서 초기화
-  double closeThreshold = 70.0;
-
-  double dragRange = 0.0;
-
-  double videoPostion = 0.0;
-
   @override
   void initState() {
     super.initState();
@@ -108,8 +100,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    closeThreshold = MediaQuery.of(context).size.height / 3;
   }
 
   /// 현재화면에서 앱 밖으로 나갔을 때, 시스템 UI가 보이도록 설정
@@ -158,32 +148,31 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
         },
         child: GestureDetector(
           onTap: _onTapBackground,
-          onVerticalDragStart: _onVerticalDragStart,
-          onVerticalDragUpdate: _onVerticalDragUpdate,
-          onVerticalDragCancel: _onVerticalDragCancel,
-          onVerticalDragEnd: _onVerticalDragEnd,
           child: Scaffold(
             extendBodyBehindAppBar: true,
             appBar: _isFullScreen ? null : appBar,
             backgroundColor: Colors.black,
-            body: Stack(
-              children: [
-                Positioned(
-                  top: videoPostion,
-                  child: SizeFactorBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    child: Center(
-                      child: _VideoContent(
-                        vc: _vc,
-                        ratio: _getRatio(_isFullScreen),
-                        isFullScreen: _isFullScreen,
-                        onTapFullScreen: _onTapFullScreen,
-                      ),
-                    ),
+            body: DragActionWidget(
+              // enableWidgetDrag: _isFullScreen,
+              onDragEnd: () {
+                if (_isFullScreen) {
+                  _setPortrait();
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: SizedBox(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                child: Center(
+                  child: _VideoContent(
+                    vc: _vc,
+                    ratio: _getRatio(_isFullScreen),
+                    isFullScreen: _isFullScreen,
+                    onTapFullScreen: _onTapFullScreen,
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -244,49 +233,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
       SystemUiMode.immersiveSticky,
       overlays: [],
     );
-  }
-
-  void _onVerticalDragStart(DragStartDetails details) {
-    if (!_isFullScreen) return;
-    dragStartPos = details.globalPosition.dy;
-  }
-
-  void _onVerticalDragUpdate(DragUpdateDetails details) {
-    if (!_isFullScreen) return;
-
-    setState(() {
-      dragRange = details.globalPosition.dy - dragStartPos;
-
-      if (dragRange > closeThreshold) {
-        videoPostion = closeThreshold;
-      } else if (dragRange < 0) {
-        videoPostion = 0;
-      } else {
-        videoPostion = dragRange;
-      }
-    });
-  }
-
-  void _onVerticalDragCancel() {
-    _resetDrag();
-  }
-
-  void _onVerticalDragEnd(DragEndDetails details) {
-    if (_isFullScreen) {
-      if (dragRange > closeThreshold) {
-        _setPortrait();
-      }
-    }
-
-    _resetDrag();
-  }
-
-  void _resetDrag() {
-    setState(() {
-      dragStartPos = 0;
-      dragRange = 0;
-      videoPostion = 0;
-    });
   }
 }
 
