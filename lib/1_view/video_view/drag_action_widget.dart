@@ -63,6 +63,7 @@ class _DragActionWidgetState extends State<DragActionWidget> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onVerticalDragStart: _onVerticalDragStart,
       onVerticalDragUpdate: _onVerticalDragUpdate,
       onVerticalDragCancel: _onVerticalDragCancel,
