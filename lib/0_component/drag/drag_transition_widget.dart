@@ -112,8 +112,8 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
             bottom: widgetPostion.bottom,
             left: widgetPostion.left,
             right: widgetPostion.right,
-            child: ScaleSizedBox(
-              sizeFactor: widgetSizeFactor,
+            child: Transform.scale(
+              scale: widgetSizeFactor,
               child: widget.child,
             ),
           ),
@@ -183,24 +183,44 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     switch (dragDirection) {
       case DragDirection.up:
         if (widget.moveConfig?.moveBottomToTop == null) return;
-        _calculatePosition(dragDirection, dragRange);
+        _updatePosition(
+            dragDirection,
+            dragRange,
+            widget.moveConfig?.moveBottomToTop?.dragThreshold ??
+                defaultDragMoveThreshold);
         break;
       case DragDirection.down:
         if (widget.moveConfig?.moveTopToBottom == null) return;
-        _calculatePosition(dragDirection, dragRange);
+        _updatePosition(
+            dragDirection,
+            dragRange,
+            widget.moveConfig?.moveTopToBottom?.dragThreshold ??
+                defaultDragMoveThreshold);
         break;
       case DragDirection.left:
         if (widget.moveConfig?.moveRightToLeft == null) return;
-        _calculatePosition(dragDirection, dragRange);
+        _updatePosition(
+            dragDirection,
+            dragRange,
+            widget.moveConfig?.moveRightToLeft?.dragThreshold ??
+                defaultDragMoveThreshold);
         break;
       case DragDirection.right:
         if (widget.moveConfig?.moveLeftToRight == null) return;
-        _calculatePosition(dragDirection, dragRange);
+        _updatePosition(
+            dragDirection,
+            dragRange,
+            widget.moveConfig?.moveLeftToRight?.dragThreshold ??
+                defaultDragMoveThreshold);
         break;
     }
   }
 
-  void _calculatePosition(DragDirection dragDirection, double dragRange) {
+  void _updatePosition(
+    DragDirection dragDirection,
+    double dragRange,
+    double dragThreshold,
+  ) {
     setState(() {
       widgetPostion = _WidgetPosition.onDrag(
         dragDirection: dragDirection,
@@ -216,13 +236,49 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     switch (dragDirection) {
       case DragDirection.up:
         if (widget.zoomConfig?.zoomDownToUp == null) return;
+        _updateZoomScale(
+            dragRange,
+            widget.zoomConfig?.zoomDownToUp?.dragThreshold ??
+                defaultDragZoomThreshold);
+        break;
       case DragDirection.down:
         if (widget.zoomConfig?.zoomUpToDown == null) return;
+        _updateZoomScale(
+            dragRange,
+            widget.zoomConfig?.zoomUpToDown?.dragThreshold ??
+                defaultDragZoomThreshold);
+        break;
       case DragDirection.left:
         if (widget.zoomConfig?.zoomRightToLeft == null) return;
+        _updateZoomScale(
+            dragRange,
+            widget.zoomConfig?.zoomRightToLeft?.dragThreshold ??
+                defaultDragZoomThreshold);
+        break;
       case DragDirection.right:
         if (widget.zoomConfig?.zoomLeftToRight == null) return;
+        _updateZoomScale(
+            dragRange,
+            widget.zoomConfig?.zoomLeftToRight?.dragThreshold ??
+                defaultDragZoomThreshold);
+        break;
     }
+  }
+
+  void _updateZoomScale(double dragRange, double zoomThreshold) {
+    final zoomValue = min(dragRange, defaultDragZoomThreshold);
+
+    setState(() {
+      widgetSizeFactor = _getZoomValue(zoomValue, 0, zoomThreshold);
+    });
+  }
+
+  double _getZoomValue(
+    double value,
+    double fromMin,
+    double fromMax,
+  ) {
+    return (value - fromMin) / (fromMax - fromMin) * (1.0 - 0.0) + 0.0;
   }
 
   void _resetDrag() {
@@ -242,9 +298,8 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
       widgetPostion = _WidgetPosition.initFromConfig(
         moveConfig: widget.moveConfig,
       );
+      widgetSizeFactor = 1.0;
     });
-
-    widgetSizeFactor = 1.0;
   }
 }
 
@@ -273,6 +328,22 @@ class _WidgetPosition {
         moveConfig.moveLeftToRight == null &&
         moveConfig.moveRightToLeft == null) {
       return _WidgetPosition(top: 0);
+    }
+
+    if (moveConfig.moveTopToBottom != null) {
+      return _WidgetPosition(top: 0);
+    }
+
+    if (moveConfig.moveBottomToTop != null) {
+      return _WidgetPosition(bottom: 0);
+    }
+
+    if (moveConfig.moveLeftToRight != null) {
+      return _WidgetPosition(left: 0);
+    }
+
+    if (moveConfig.moveRightToLeft != null) {
+      return _WidgetPosition(right: 0);
     }
 
     return _WidgetPosition(top: 0);

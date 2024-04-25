@@ -21,13 +21,25 @@ class DragTestView extends StatelessWidget {
                 moveTopToBottom: DragMoveProperties(
                   dragThreshold: maxHeight,
                 ),
-                moveBottomToTop: DragMoveProperties(
+                // moveBottomToTop: DragMoveProperties(
+                //   dragThreshold: maxHeight,
+                // ),
+                // moveLeftToRight: DragMoveProperties(
+                //   dragThreshold: maxHeight,
+                // ),
+                // moveRightToLeft: DragMoveProperties(
+                //   dragThreshold: maxHeight,
+                // ),
+              ),
+              zoomConfig: DragZoomConfig(
+                zoomUpToDown: DragZoomProperties(
+                  type: DragZoomType.zoomOut,
+                  scale: 0.8,
                   dragThreshold: maxHeight,
                 ),
-                moveLeftToRight: DragMoveProperties(
-                  dragThreshold: maxHeight,
-                ),
-                moveRightToLeft: DragMoveProperties(
+                zoomDownToUp: DragZoomProperties(
+                  type: DragZoomType.zoomOut,
+                  scale: 1.2,
                   dragThreshold: maxHeight,
                 ),
               ),
