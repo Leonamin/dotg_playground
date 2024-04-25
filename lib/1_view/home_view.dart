@@ -1,4 +1,5 @@
 import 'package:dotg_playground/1_view/bottom_sliver_view.dart';
+import 'package:dotg_playground/1_view/drag_test_view.dart';
 import 'package:dotg_playground/1_view/fuse_view.dart';
 import 'package:dotg_playground/1_view/looping_page_view.dart';
 import 'package:dotg_playground/1_view/quill_view.dart';
@@ -75,6 +76,7 @@ class HomeView extends StatelessWidget {
                 page: ImfineYoutubePlayerView(
                   videoUrl: 'https://youtu.be/fD8Yj4kNh50',
                 )),
+            const _NavigatorButton(text: 'DragTest', page: DragTestView()),
           ],
         ),
       ),

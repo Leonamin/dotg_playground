@@ -1,4 +1,4 @@
-import 'package:dotg_playground/1_view/video_view/drag_action_widget.dart';
+import 'package:dotg_playground/0_component/drag/drag_action_widget.dart';
 import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
