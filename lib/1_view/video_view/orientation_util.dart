@@ -10,16 +10,36 @@ class OrientationUtil {
     ]);
   }
 
-  static void setPortrait() {
+  static void setPortraitUp() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
+    ]);
+  }
+
+  static void setPortraitDown() {
+    SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
     ]);
   }
 
-  static void setLandscape() {
+  static void setLandscape({
+    bool isLeft = true,
+  }) {
+    if (isLeft) {
+      setLandscapeLeft();
+    } else {
+      setLandscapeRight();
+    }
+  }
+
+  static void setLandscapeLeft() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
+    ]);
+  }
+
+  static void setLandscapeRight() {
+    SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
     ]);
   }

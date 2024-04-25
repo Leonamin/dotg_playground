@@ -2,6 +2,8 @@ import 'package:dotg_playground/1_view/video_view/drag_action_widget.dart';
 import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sensors/sensors.dart';
+import 'package:throttling/throttling.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ImfineYoutubeThumbnailView extends StatelessWidget {
@@ -80,6 +82,10 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   bool _isFullScreen = false;
 
+  double _lastAccelerometerX = 0.0;
+
+  final thr = Throttling<void>(duration: const Duration(milliseconds: 1000));
+
   @override
   void initState() {
     super.initState();
@@ -95,11 +101,14 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
     );
 
     OrientationUtil.enableOrientationAll();
-  }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    accelerometerEvents.listen((AccelerometerEvent event) {
+      _lastAccelerometerX = event.x;
+
+      if (!_isFullScreen) return;
+
+      _setFullScreen(true);
+    });
   }
 
   /// 현재화면에서 앱 밖으로 나갔을 때, 시스템 UI가 보이도록 설정
@@ -108,11 +117,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
     switch (state) {
       case AppLifecycleState.resumed:
         _hideSystemUi();
-        if (_isFullScreen) {
-          _setLandscape();
-        } else {
-          _setPortrait();
-        }
         break;
       case AppLifecycleState.paused:
         _showSystemUi();
@@ -140,11 +144,7 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
       return PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
-          if (_isFullScreen) {
-            _setPortrait();
-          } else {
-            Navigator.of(context).pop();
-          }
+          _onActionBack(context);
         },
         child: GestureDetector(
           onTap: _onTapBackground,
@@ -153,13 +153,8 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
             appBar: _isFullScreen ? null : appBar,
             backgroundColor: Colors.black,
             body: DragActionWidget(
-              // enableWidgetDrag: _isFullScreen,
               onDragEnd: () {
-                if (_isFullScreen) {
-                  _setPortrait();
-                } else {
-                  Navigator.of(context).pop();
-                }
+                _onActionBack(context);
               },
               child: SizedBox(
                 width: MediaQuery.of(context).size.width,
@@ -182,17 +177,51 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   @override
   void dispose() {
-    _setPortrait();
+    _setFullScreen(false);
     _showSystemUi();
     super.dispose();
   }
 
+  void _onActionBack(BuildContext context) {
+    if (_isFullScreen) {
+      _setFullScreen(false);
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _setFullScreen(bool fullScreen) {
+    thr.throttle(() {
+      if (fullScreen) {
+        _setLandscape();
+      } else {
+        _setPortrait();
+      }
+    });
+  }
+
   void _setPortrait() {
-    OrientationUtil.setPortrait();
+    OrientationUtil.setPortraitUp();
   }
 
   void _setLandscape() {
-    OrientationUtil.setLandscape();
+    if (_lastAccelerometerX > -7.0) {
+      _setLandScapeLeft();
+    } else {
+      _setLandScapeRight();
+    }
+  }
+
+  void _setLandScapeLeft() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+    ]);
+  }
+
+  void _setLandScapeRight() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
   void _onTapFullScreen() {
