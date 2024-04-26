@@ -51,12 +51,12 @@ enum DragAxis {
   horizontal,
 }
 
-class DragEndProperties {
+class DragEndEventConfig {
   final DragDirection direction;
   final double dragThreshold;
   final Function()? onDragEnd;
 
-  const DragEndProperties({
+  const DragEndEventConfig({
     required this.direction,
     required this.dragThreshold,
     this.onDragEnd,

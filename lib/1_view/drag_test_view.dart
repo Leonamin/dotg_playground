@@ -37,32 +37,32 @@ class DragTestView extends StatelessWidget {
                   dragThreshold: MediaQuery.of(context).size.height / 10,
                 ),
               ),
-              endConfig: DragEndConfig(
-                endTopToBottom: DragEndProperties(
+              dragEndEvents: [
+                DragEndEventConfig(
                   direction: DragDirection.down,
-                  dragThreshold: maxHeight,
+                  dragThreshold: 100,
                   onDragEnd: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Top to Bottom Drag End'),
+                        content: Text('100 Top to Bottom Drag End'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+                DragEndEventConfig(
+                  direction: DragDirection.down,
+                  dragThreshold: 200,
+                  onDragEnd: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('200 Top to Bottom Drag End'),
                         duration: Duration(seconds: 1),
                       ),
                     );
                   },
                 ),
-                // endBottomToTop: DragEndProperties(
-                //   direction: DragDirection.up,
-                //   dragThreshold: maxHeight,
-                //   onDragEnd: () {
-                //     ScaffoldMessenger.of(context).showSnackBar(
-                //       const SnackBar(
-                //         content: Text('Bottom to Top Drag End'),
-                //         duration: Duration(seconds: 1),
-                //       ),
-                //     );
-                //   },
-                // ),
-              ),
+              ],
               child: Container(
                 color: Colors.red,
                 height: maxHeight,

@@ -55,10 +55,10 @@ class DragZoomConfig {
 
 /// 잘못만듦
 class DragEndConfig {
-  final DragEndProperties? endTopToBottom;
-  final DragEndProperties? endBottomToTop;
-  final DragEndProperties? endLeftToRight;
-  final DragEndProperties? endRightToLeft;
+  final DragEndEventConfig? endTopToBottom;
+  final DragEndEventConfig? endBottomToTop;
+  final DragEndEventConfig? endLeftToRight;
+  final DragEndEventConfig? endRightToLeft;
 
   const DragEndConfig({
     this.endTopToBottom,
@@ -72,7 +72,7 @@ class DragEndConfig {
 class DragTransitionWidget extends StatefulWidget {
   final DragZoomConfig? zoomConfig;
   final DragMoveConfig? moveConfig;
-  final DragEndConfig? endConfig;
+  final List<DragEndEventConfig> dragEndEvents;
 
   final bool enableMove;
   final bool enableZoom;
@@ -82,7 +82,7 @@ class DragTransitionWidget extends StatefulWidget {
     super.key,
     this.moveConfig,
     this.zoomConfig,
-    this.endConfig,
+    this.dragEndEvents = const [],
     this.enableMove = true,
     this.enableZoom = true,
     required this.child,
@@ -159,55 +159,24 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
   }
 
   void _onDragEnd() {
-    _processEndEvent();
+    _callEndEvents();
 
     _resetDrag();
   }
 
-  void _processEndEvent() {
-    if (widget.endConfig == null) return;
+  void _callEndEvents() {
+    if (widget.dragEndEvents.isEmpty) return;
 
     final dragDirection = _getDragDirection();
     final dragRange = (_lastPosition - dragStartPos).abs();
 
-    switch (dragDirection) {
-      case DragDirection.up:
-        if (widget.endConfig!.endBottomToTop == null) return;
+    final matchedEvents = widget.dragEndEvents
+        .where((event) => event.direction == dragDirection)
+        .where((event) => event.dragThreshold <= dragRange)
+        .toList();
 
-        final threshold = widget.endConfig!.endBottomToTop!.dragThreshold;
-
-        if (dragRange >= threshold) {
-          widget.endConfig!.endBottomToTop!.onDragEnd?.call();
-        }
-        break;
-      case DragDirection.down:
-        if (widget.endConfig!.endTopToBottom == null) return;
-
-        final threshold = widget.endConfig!.endTopToBottom!.dragThreshold;
-
-        if (dragRange >= threshold) {
-          widget.endConfig!.endTopToBottom!.onDragEnd?.call();
-        }
-
-        break;
-      case DragDirection.left:
-        if (widget.endConfig!.endRightToLeft == null) return;
-
-        final threshold = widget.endConfig!.endRightToLeft!.dragThreshold;
-
-        if (dragRange >= threshold) {
-          widget.endConfig!.endRightToLeft!.onDragEnd?.call();
-        }
-        break;
-      case DragDirection.right:
-        if (widget.endConfig!.endLeftToRight == null) return;
-
-        final threshold = widget.endConfig!.endLeftToRight!.dragThreshold;
-
-        if (dragRange >= threshold) {
-          widget.endConfig!.endLeftToRight!.onDragEnd?.call();
-        }
-        break;
+    for (final event in matchedEvents) {
+      event.onDragEnd?.call();
     }
   }
 
