@@ -16,7 +16,7 @@ class DragMoveConfig {
   /// 오른쪽에서 왼쪽으로 드래그
   final DragMoveProperties? moveRightToLeft;
 
-  DragMoveConfig({
+  const DragMoveConfig({
     this.moveTopToBottom,
     this.moveBottomToTop,
     this.moveLeftToRight,
@@ -45,7 +45,7 @@ class DragZoomConfig {
   /// 오른쪽에서 왼쪽으로 줌
   final DragZoomProperties? zoomRightToLeft;
 
-  DragZoomConfig({
+  const DragZoomConfig({
     this.zoomTopToBottom,
     this.zoomBottomToTop,
     this.zoomLeftToRight,
@@ -61,6 +61,8 @@ class DragTransitionWidget extends StatefulWidget {
 
   final bool enableMove;
   final bool enableZoom;
+
+  /// 사이즈 무조건 갖고 있을것
   final Widget child;
 
   const DragTransitionWidget({
@@ -79,19 +81,15 @@ class DragTransitionWidget extends StatefulWidget {
 
 class _DragTransitionWidgetState extends State<DragTransitionWidget> {
   /// 드래그 시작 위치
-  double dragStartPos = 0.0;
+  double _initialDragPosition = 0.0;
+  DragAxis _draggingAxis = DragAxis.empty;
+  double _lastPosition = 0.0;
 
-  _WidgetPosition widgetPostion = _WidgetPosition();
+  _WidgetPosition widgetPosition = _WidgetPosition();
 
   double widgetSizeFactor = 1.0;
 
-  // double get dragMoveThreshold =>
-  //     widget.moveConfig?.dragThreshold ?? defaultDragMoveThreshold;
   double get defaultDragMoveThreshold => MediaQuery.of(context).size.height / 3;
-
-  // double get dragZoomThreshold =>
-  //     widget.zoomConfig?.dragThreshold ?? defaultDragZoomThreshold;
-
   double get defaultDragZoomThreshold => MediaQuery.of(context).size.height / 6;
 
   @override
@@ -106,13 +104,15 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
       onHorizontalDragUpdate: _onHorizontalDragUpdate,
       onHorizontalDragCancel: _onDragCancel,
       onHorizontalDragEnd: (_) => _onDragEnd(),
+      onLongPress: () {},
+      onLongPressMoveUpdate: (details) {},
       child: Stack(
         children: [
           Positioned(
-            top: widgetPostion.top,
-            bottom: widgetPostion.bottom,
-            left: widgetPostion.left,
-            right: widgetPostion.right,
+            top: widgetPosition.top,
+            bottom: widgetPosition.bottom,
+            left: widgetPosition.left,
+            right: widgetPosition.right,
             child: Transform.scale(
               scale: widgetSizeFactor,
               child: widget.child,
@@ -153,7 +153,7 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     if (widget.dragEndEvents.isEmpty) return;
 
     final dragDirection = _getDragDirection();
-    final dragRange = (_lastPosition - dragStartPos).abs();
+    final dragRange = (_lastPosition - _initialDragPosition).abs();
 
     final matchedEvents = widget.dragEndEvents
         .where((event) => event.direction == dragDirection)
@@ -165,9 +165,6 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     }
   }
 
-  DragAxis _draggingAxis = DragAxis.empty;
-  double _lastPosition = 0.0;
-
   /// 드래그 업데이트
   void _onDragUpdate(
     DragAxis axis,
@@ -176,18 +173,17 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     if (_draggingAxis != axis) {
       _resetDrag();
       _draggingAxis = axis;
-      dragStartPos = position;
+      _initialDragPosition = position;
     }
     _lastPosition = position;
-    print('dragStartPos: $dragStartPos');
 
-    final dragDiff = _lastPosition - dragStartPos;
+    final dragDiff = _lastPosition - _initialDragPosition;
 
     _actionDragEvent(dragDiff);
   }
 
   DragDirection _getDragDirection() {
-    final dragDiff = _lastPosition - dragStartPos;
+    final dragDiff = _lastPosition - _initialDragPosition;
 
     bool isPositive = dragDiff > 0;
 
@@ -210,43 +206,24 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
   }
 
   void _processWidgetMove(DragDirection dragDirection, double dragRange) {
-    switch (dragDirection) {
+    DragMoveProperties? properties =
+        _getMovePropertiesForDirection(dragDirection);
+    if (properties == null) return;
+
+    double dragThreshold = properties.dragThreshold;
+    _updatePosition(dragDirection, dragRange, dragThreshold);
+  }
+
+  DragMoveProperties? _getMovePropertiesForDirection(DragDirection direction) {
+    switch (direction) {
       case DragDirection.up:
-        if (widget.moveConfig?.moveBottomToTop == null) return;
-        _updatePosition(
-          dragDirection,
-          dragRange,
-          widget.moveConfig?.moveBottomToTop?.dragThreshold ??
-              defaultDragMoveThreshold,
-        );
-        break;
+        return widget.moveConfig?.moveBottomToTop;
       case DragDirection.down:
-        if (widget.moveConfig?.moveTopToBottom == null) return;
-        _updatePosition(
-          dragDirection,
-          dragRange,
-          widget.moveConfig?.moveTopToBottom?.dragThreshold ??
-              defaultDragMoveThreshold,
-        );
-        break;
+        return widget.moveConfig?.moveTopToBottom;
       case DragDirection.left:
-        if (widget.moveConfig?.moveRightToLeft == null) return;
-        _updatePosition(
-          dragDirection,
-          dragRange,
-          widget.moveConfig?.moveRightToLeft?.dragThreshold ??
-              defaultDragMoveThreshold,
-        );
-        break;
+        return widget.moveConfig?.moveRightToLeft;
       case DragDirection.right:
-        if (widget.moveConfig?.moveLeftToRight == null) return;
-        _updatePosition(
-          dragDirection,
-          dragRange,
-          widget.moveConfig?.moveLeftToRight?.dragThreshold ??
-              defaultDragMoveThreshold,
-        );
-        break;
+        return widget.moveConfig?.moveLeftToRight;
     }
   }
 
@@ -256,58 +233,42 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     double dragThreshold,
   ) {
     setState(() {
-      widgetPostion = _WidgetPosition.onDrag(
+      widgetPosition = _WidgetPosition.onDrag(
         dragDirection: dragDirection,
-        moveProperties: DragMoveProperties(
-          dragThreshold: dragThreshold,
-        ),
+        moveProperties: DragMoveProperties(dragThreshold: dragThreshold),
         dragRange: dragRange,
       );
     });
   }
 
   void _processWidgetZoom(DragDirection dragDirection, double dragRange) {
-    switch (dragDirection) {
+    if (!widget.enableZoom) return;
+
+    DragZoomProperties? properties =
+        _getZoomPropertiesForDirection(dragDirection);
+
+    if (properties == null) return;
+
+    double dragThreshold = properties.dragThreshold;
+
+    _updateZoomScale(
+      properties.type,
+      dragRange,
+      dragThreshold,
+      properties.scaleLimit,
+    );
+  }
+
+  DragZoomProperties? _getZoomPropertiesForDirection(DragDirection direction) {
+    switch (direction) {
       case DragDirection.up:
-        if (widget.zoomConfig?.zoomBottomToTop == null) return;
-        _updateZoomScale(
-          widget.zoomConfig!.zoomBottomToTop!.type,
-          dragRange,
-          widget.zoomConfig?.zoomBottomToTop?.dragThreshold ??
-              defaultDragZoomThreshold,
-          widget.zoomConfig!.zoomBottomToTop!.scaleLimit,
-        );
-        break;
+        return widget.zoomConfig?.zoomBottomToTop;
       case DragDirection.down:
-        if (widget.zoomConfig?.zoomTopToBottom == null) return;
-        _updateZoomScale(
-          widget.zoomConfig!.zoomTopToBottom!.type,
-          dragRange,
-          widget.zoomConfig?.zoomTopToBottom?.dragThreshold ??
-              defaultDragZoomThreshold,
-          widget.zoomConfig!.zoomTopToBottom!.scaleLimit,
-        );
-        break;
+        return widget.zoomConfig?.zoomTopToBottom;
       case DragDirection.left:
-        if (widget.zoomConfig?.zoomRightToLeft == null) return;
-        _updateZoomScale(
-          widget.zoomConfig!.zoomRightToLeft!.type,
-          dragRange,
-          widget.zoomConfig?.zoomRightToLeft?.dragThreshold ??
-              defaultDragZoomThreshold,
-          widget.zoomConfig!.zoomRightToLeft!.scaleLimit,
-        );
-        break;
+        return widget.zoomConfig?.zoomRightToLeft;
       case DragDirection.right:
-        if (widget.zoomConfig?.zoomLeftToRight == null) return;
-        _updateZoomScale(
-          widget.zoomConfig!.zoomLeftToRight!.type,
-          dragRange,
-          widget.zoomConfig?.zoomLeftToRight?.dragThreshold ??
-              defaultDragZoomThreshold,
-          widget.zoomConfig!.zoomLeftToRight!.scaleLimit,
-        );
-        break;
+        return widget.zoomConfig?.zoomLeftToRight;
     }
   }
 
@@ -360,13 +321,13 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     setState(() {
       _draggingAxis = DragAxis.empty;
       _lastPosition = 0;
-      dragStartPos = 0;
+      _initialDragPosition = 0;
     });
   }
 
   void _initPosition() {
     setState(() {
-      widgetPostion = _WidgetPosition.initFromConfig(
+      widgetPosition = _WidgetPosition.initFromConfig(
         moveConfig: widget.moveConfig,
       );
       widgetSizeFactor = 1.0;
@@ -375,12 +336,12 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
 }
 
 class _WidgetPosition {
-  double? top;
-  double? bottom;
-  double? left;
-  double? right;
+  final double? top;
+  final double? bottom;
+  final double? left;
+  final double? right;
 
-  _WidgetPosition({
+  const _WidgetPosition({
     this.top = 0.0,
     this.bottom,
     this.left,
@@ -391,33 +352,33 @@ class _WidgetPosition {
     DragMoveConfig? moveConfig,
   }) {
     if (moveConfig == null) {
-      return _WidgetPosition(top: 0);
+      return const _WidgetPosition(top: 0);
     }
 
     if (moveConfig.moveBottomToTop == null &&
         moveConfig.moveTopToBottom == null &&
         moveConfig.moveLeftToRight == null &&
         moveConfig.moveRightToLeft == null) {
-      return _WidgetPosition(top: 0);
+      return const _WidgetPosition(top: 0);
     }
 
     if (moveConfig.moveTopToBottom != null) {
-      return _WidgetPosition(top: 0);
+      return const _WidgetPosition(top: 0);
     }
 
     if (moveConfig.moveBottomToTop != null) {
-      return _WidgetPosition(top: 0);
+      return const _WidgetPosition(top: 0);
     }
 
     if (moveConfig.moveLeftToRight != null) {
-      return _WidgetPosition(left: 0);
+      return const _WidgetPosition(left: 0);
     }
 
     if (moveConfig.moveRightToLeft != null) {
-      return _WidgetPosition(right: 0);
+      return const _WidgetPosition(right: 0);
     }
 
-    return _WidgetPosition(top: 0);
+    return const _WidgetPosition(top: 0);
   }
 
   factory _WidgetPosition.onDrag({
