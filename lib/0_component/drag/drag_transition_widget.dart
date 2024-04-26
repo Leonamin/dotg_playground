@@ -35,10 +35,10 @@ class DragMoveConfig {
 
 class DragZoomConfig {
   /// 위에서 아래로 줌
-  final DragZoomProperties? zoomUpToDown;
+  final DragZoomProperties? zoomTopToBottom;
 
   /// 아래에서 위로 줌
-  final DragZoomProperties? zoomDownToUp;
+  final DragZoomProperties? zoomBottomToTop;
 
   /// 왼쪽에서 오른쪽으로 줌
   final DragZoomProperties? zoomLeftToRight;
@@ -47,8 +47,8 @@ class DragZoomConfig {
   final DragZoomProperties? zoomRightToLeft;
 
   DragZoomConfig({
-    this.zoomUpToDown,
-    this.zoomDownToUp,
+    this.zoomTopToBottom,
+    this.zoomBottomToTop,
     this.zoomLeftToRight,
     this.zoomRightToLeft,
   });
@@ -235,50 +235,86 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
   void _processWidgetZoom(DragDirection dragDirection, double dragRange) {
     switch (dragDirection) {
       case DragDirection.up:
-        if (widget.zoomConfig?.zoomDownToUp == null) return;
+        if (widget.zoomConfig?.zoomBottomToTop == null) return;
         _updateZoomScale(
-            dragRange,
-            widget.zoomConfig?.zoomDownToUp?.dragThreshold ??
-                defaultDragZoomThreshold);
+          widget.zoomConfig!.zoomBottomToTop!.type,
+          dragRange,
+          widget.zoomConfig?.zoomBottomToTop?.dragThreshold ??
+              defaultDragZoomThreshold,
+          widget.zoomConfig!.zoomBottomToTop!.scaleLimit,
+        );
         break;
       case DragDirection.down:
-        if (widget.zoomConfig?.zoomUpToDown == null) return;
+        if (widget.zoomConfig?.zoomTopToBottom == null) return;
         _updateZoomScale(
-            dragRange,
-            widget.zoomConfig?.zoomUpToDown?.dragThreshold ??
-                defaultDragZoomThreshold);
+          widget.zoomConfig!.zoomTopToBottom!.type,
+          dragRange,
+          widget.zoomConfig?.zoomTopToBottom?.dragThreshold ??
+              defaultDragZoomThreshold,
+          widget.zoomConfig!.zoomTopToBottom!.scaleLimit,
+        );
         break;
       case DragDirection.left:
         if (widget.zoomConfig?.zoomRightToLeft == null) return;
         _updateZoomScale(
-            dragRange,
-            widget.zoomConfig?.zoomRightToLeft?.dragThreshold ??
-                defaultDragZoomThreshold);
+          widget.zoomConfig!.zoomRightToLeft!.type,
+          dragRange,
+          widget.zoomConfig?.zoomRightToLeft?.dragThreshold ??
+              defaultDragZoomThreshold,
+          widget.zoomConfig!.zoomRightToLeft!.scaleLimit,
+        );
         break;
       case DragDirection.right:
         if (widget.zoomConfig?.zoomLeftToRight == null) return;
         _updateZoomScale(
-            dragRange,
-            widget.zoomConfig?.zoomLeftToRight?.dragThreshold ??
-                defaultDragZoomThreshold);
+          widget.zoomConfig!.zoomLeftToRight!.type,
+          dragRange,
+          widget.zoomConfig?.zoomLeftToRight?.dragThreshold ??
+              defaultDragZoomThreshold,
+          widget.zoomConfig!.zoomLeftToRight!.scaleLimit,
+        );
         break;
     }
   }
 
-  void _updateZoomScale(double dragRange, double zoomThreshold) {
-    final zoomValue = min(dragRange, defaultDragZoomThreshold);
+  void _updateZoomScale(
+    DragZoomType zoomType,
+    double dragRange,
+    double zoomThreshold,
+    double scaleLimit,
+  ) {
+    double limitDragRange = min(dragRange, defaultDragZoomThreshold);
+
+    if (zoomType == DragZoomType.zoomIn) {
+      limitDragRange = 1 + _getZoomValue(limitDragRange, 0, zoomThreshold);
+      limitDragRange = min(scaleLimit, limitDragRange);
+    } else {
+      limitDragRange = 1 - _getZoomValue(limitDragRange, 0, zoomThreshold);
+      limitDragRange = max(scaleLimit, limitDragRange);
+    }
 
     setState(() {
-      widgetSizeFactor = _getZoomValue(zoomValue, 0, zoomThreshold);
+      widgetSizeFactor = limitDragRange;
     });
   }
 
-  double _getZoomValue(
+  /// [value]를 [fromMin], [fromMax]를 [toMin], [toMax] 비율로 맞춘 범위의 값으로 매핑
+  double mapValue(
     double value,
     double fromMin,
     double fromMax,
+    double toMin,
+    double toMax,
   ) {
-    return (value - fromMin) / (fromMax - fromMin) * (1.0 - 0.0) + 0.0;
+    return (value - fromMin) / (fromMax - fromMin) * (toMax - toMin) + toMin;
+  }
+
+  double _getZoomValue(
+    double dragRange,
+    double fromMin,
+    double fromMax,
+  ) {
+    return mapValue(dragRange, fromMin, fromMax, 0, 1);
   }
 
   void _resetDrag() {

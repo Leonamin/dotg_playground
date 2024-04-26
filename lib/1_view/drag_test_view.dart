@@ -32,15 +32,15 @@ class DragTestView extends StatelessWidget {
                 // ),
               ),
               zoomConfig: DragZoomConfig(
-                zoomUpToDown: DragZoomProperties(
+                zoomTopToBottom: DragZoomProperties(
                   type: DragZoomType.zoomOut,
-                  scale: 0.8,
-                  dragThreshold: maxHeight,
+                  scaleLimit: 0.9,
+                  dragThreshold: MediaQuery.of(context).size.height / 10,
                 ),
-                zoomDownToUp: DragZoomProperties(
-                  type: DragZoomType.zoomOut,
-                  scale: 1.2,
-                  dragThreshold: maxHeight,
+                zoomBottomToTop: DragZoomProperties(
+                  type: DragZoomType.zoomIn,
+                  scaleLimit: 1.1,
+                  dragThreshold: MediaQuery.of(context).size.height / 10,
                 ),
               ),
               child: Container(

@@ -8,14 +8,14 @@ class DragZoomProperties {
   final DragZoomType type;
 
   /// 본 크기로부터 확대/축소 비율
-  final double scale;
+  final double scaleLimit;
 
   /// 최대로 확대/축소되는 지점
   final double dragThreshold;
 
   DragZoomProperties({
     required this.type,
-    required this.scale,
+    required this.scaleLimit,
     required this.dragThreshold,
   });
 }
