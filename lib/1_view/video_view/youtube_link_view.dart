@@ -1,4 +1,5 @@
-import 'package:dotg_playground/0_component/drag/drag_action_widget.dart';
+import 'package:dotg_playground/0_component/drag/0_data/drag_properties.dart';
+import 'package:dotg_playground/0_component/drag/drag_transition_widget.dart';
 import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -141,6 +142,14 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
       _isFullScreen = isLandScape;
 
+      final widgetHeight = MediaQuery.of(context).size.height;
+      final widgetWidth = MediaQuery.of(context).size.width;
+
+      final moveUpThreshold = MediaQuery.of(context).size.height / 10;
+      final moveDownThreshold = MediaQuery.of(context).size.height / 3;
+      print(moveDownThreshold);
+      final zoomInThreshold = MediaQuery.of(context).size.height / 6;
+
       return PopScope(
         canPop: false,
         onPopInvoked: (didPop) {
@@ -152,13 +161,43 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
             extendBodyBehindAppBar: true,
             appBar: _isFullScreen ? null : appBar,
             backgroundColor: Colors.black,
-            body: DragActionWidget(
-              onDragEnd: () {
-                _onActionBack(context);
-              },
+            body: DragTransitionWidget(
+              enableMove: true,
+              moveConfig: DragMoveConfig(
+                moveTopToBottom: DragMoveProperties(
+                  dragThreshold: moveDownThreshold,
+                ),
+                moveBottomToTop: DragMoveProperties(
+                  dragThreshold: moveUpThreshold,
+                ),
+              ),
+              zoomConfig: DragZoomConfig(
+                zoomTopToBottom: DragZoomProperties(
+                  type: DragZoomType.zoomOut,
+                  scaleLimit: 0.8,
+                  dragThreshold: zoomInThreshold,
+                ),
+                zoomBottomToTop: DragZoomProperties(
+                  type: DragZoomType.zoomIn,
+                  scaleLimit: 1.2,
+                  dragThreshold: zoomInThreshold,
+                ),
+              ),
+              dragEndEvents: [
+                DragEndEventConfig(
+                  direction: DragDirection.down,
+                  dragThreshold: moveDownThreshold,
+                  onDragEnd: () => _onActionBack(context),
+                ),
+                DragEndEventConfig(
+                  direction: DragDirection.up,
+                  dragThreshold: moveUpThreshold,
+                  onDragEnd: () => _onActionDragUp(context),
+                ),
+              ],
               child: SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height,
+                width: widgetWidth,
+                height: widgetHeight,
                 child: Center(
                   child: _VideoContent(
                     vc: _vc,
@@ -183,21 +222,37 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   }
 
   void _onActionBack(BuildContext context) {
+    print('onActionBack: $_isFullScreen');
     if (_isFullScreen) {
-      _setFullScreen(false);
+      _setFullScreen(false, setForce: true);
     } else {
       Navigator.of(context).pop();
     }
   }
 
-  void _setFullScreen(bool fullScreen) {
-    thr.throttle(() {
+  void _onActionDragUp(BuildContext context) {
+    print('onActionDragUp: $_isFullScreen');
+    if (!_isFullScreen) {
+      _setFullScreen(true, setForce: true);
+    }
+  }
+
+  void _setFullScreen(bool fullScreen, {bool setForce = false}) {
+    if (setForce) {
       if (fullScreen) {
         _setLandscape();
       } else {
         _setPortrait();
       }
-    });
+    } else {
+      thr.throttle(() {
+        if (fullScreen) {
+          _setLandscape();
+        } else {
+          _setPortrait();
+        }
+      });
+    }
   }
 
   void _setPortrait() {
