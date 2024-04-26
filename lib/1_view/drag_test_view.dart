@@ -21,15 +21,9 @@ class DragTestView extends StatelessWidget {
                 moveTopToBottom: DragMoveProperties(
                   dragThreshold: maxHeight,
                 ),
-                // moveBottomToTop: DragMoveProperties(
-                //   dragThreshold: maxHeight,
-                // ),
-                // moveLeftToRight: DragMoveProperties(
-                //   dragThreshold: maxHeight,
-                // ),
-                // moveRightToLeft: DragMoveProperties(
-                //   dragThreshold: maxHeight,
-                // ),
+                moveBottomToTop: DragMoveProperties(
+                  dragThreshold: MediaQuery.of(context).size.height / 10,
+                ),
               ),
               zoomConfig: DragZoomConfig(
                 zoomTopToBottom: DragZoomProperties(

@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:dotg_playground/0_component/drag/0_data/drag_properties.dart';
-import 'package:dotg_playground/0_component/scale_sized_box.dart';
 import 'package:flutter/material.dart';
 
 class DragMoveConfig {
@@ -184,34 +183,38 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
       case DragDirection.up:
         if (widget.moveConfig?.moveBottomToTop == null) return;
         _updatePosition(
-            dragDirection,
-            dragRange,
-            widget.moveConfig?.moveBottomToTop?.dragThreshold ??
-                defaultDragMoveThreshold);
+          dragDirection,
+          dragRange,
+          widget.moveConfig?.moveBottomToTop?.dragThreshold ??
+              defaultDragMoveThreshold,
+        );
         break;
       case DragDirection.down:
         if (widget.moveConfig?.moveTopToBottom == null) return;
         _updatePosition(
-            dragDirection,
-            dragRange,
-            widget.moveConfig?.moveTopToBottom?.dragThreshold ??
-                defaultDragMoveThreshold);
+          dragDirection,
+          dragRange,
+          widget.moveConfig?.moveTopToBottom?.dragThreshold ??
+              defaultDragMoveThreshold,
+        );
         break;
       case DragDirection.left:
         if (widget.moveConfig?.moveRightToLeft == null) return;
         _updatePosition(
-            dragDirection,
-            dragRange,
-            widget.moveConfig?.moveRightToLeft?.dragThreshold ??
-                defaultDragMoveThreshold);
+          dragDirection,
+          dragRange,
+          widget.moveConfig?.moveRightToLeft?.dragThreshold ??
+              defaultDragMoveThreshold,
+        );
         break;
       case DragDirection.right:
         if (widget.moveConfig?.moveLeftToRight == null) return;
         _updatePosition(
-            dragDirection,
-            dragRange,
-            widget.moveConfig?.moveLeftToRight?.dragThreshold ??
-                defaultDragMoveThreshold);
+          dragDirection,
+          dragRange,
+          widget.moveConfig?.moveLeftToRight?.dragThreshold ??
+              defaultDragMoveThreshold,
+        );
         break;
     }
   }
@@ -225,7 +228,7 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
       widgetPostion = _WidgetPosition.onDrag(
         dragDirection: dragDirection,
         moveProperties: DragMoveProperties(
-          dragThreshold: defaultDragMoveThreshold,
+          dragThreshold: dragThreshold,
         ),
         dragRange: dragRange,
       );
@@ -371,7 +374,7 @@ class _WidgetPosition {
     }
 
     if (moveConfig.moveBottomToTop != null) {
-      return _WidgetPosition(bottom: 0);
+      return _WidgetPosition(top: 0);
     }
 
     if (moveConfig.moveLeftToRight != null) {
@@ -396,7 +399,7 @@ class _WidgetPosition {
     double? right;
     switch (dragDirection) {
       case DragDirection.up:
-        bottom = min(dragRange, moveProperties.dragThreshold);
+        top = -min(dragRange, moveProperties.dragThreshold);
         break;
       case DragDirection.down:
         top = min(dragRange, moveProperties.dragThreshold);
