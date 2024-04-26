@@ -37,6 +37,32 @@ class DragTestView extends StatelessWidget {
                   dragThreshold: MediaQuery.of(context).size.height / 10,
                 ),
               ),
+              endConfig: DragEndConfig(
+                endTopToBottom: DragEndProperties(
+                  direction: DragDirection.down,
+                  dragThreshold: maxHeight,
+                  onDragEnd: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Top to Bottom Drag End'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                ),
+                // endBottomToTop: DragEndProperties(
+                //   direction: DragDirection.up,
+                //   dragThreshold: maxHeight,
+                //   onDragEnd: () {
+                //     ScaffoldMessenger.of(context).showSnackBar(
+                //       const SnackBar(
+                //         content: Text('Bottom to Top Drag End'),
+                //         duration: Duration(seconds: 1),
+                //       ),
+                //     );
+                //   },
+                // ),
+              ),
               child: Container(
                 color: Colors.red,
                 height: maxHeight,

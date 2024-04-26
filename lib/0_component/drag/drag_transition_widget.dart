@@ -53,10 +53,26 @@ class DragZoomConfig {
   });
 }
 
+/// 잘못만듦
+class DragEndConfig {
+  final DragEndProperties? endTopToBottom;
+  final DragEndProperties? endBottomToTop;
+  final DragEndProperties? endLeftToRight;
+  final DragEndProperties? endRightToLeft;
+
+  const DragEndConfig({
+    this.endTopToBottom,
+    this.endBottomToTop,
+    this.endLeftToRight,
+    this.endRightToLeft,
+  });
+}
+
 /// 위젯을 특정 방향으로 드래그
 class DragTransitionWidget extends StatefulWidget {
   final DragZoomConfig? zoomConfig;
   final DragMoveConfig? moveConfig;
+  final DragEndConfig? endConfig;
 
   final bool enableMove;
   final bool enableZoom;
@@ -66,6 +82,7 @@ class DragTransitionWidget extends StatefulWidget {
     super.key,
     this.moveConfig,
     this.zoomConfig,
+    this.endConfig,
     this.enableMove = true,
     this.enableZoom = true,
     required this.child,
@@ -99,11 +116,11 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
       onVerticalDragStart: _onVerticalDragStart,
       onVerticalDragUpdate: _onVerticalDragUpdate,
       onVerticalDragCancel: _onDragCancel,
-      onVerticalDragEnd: (_) => _onDragCancel(),
+      onVerticalDragEnd: (_) => _onDragEnd(),
       onHorizontalDragStart: _onHorizontalDragStart,
       onHorizontalDragUpdate: _onHorizontalDragUpdate,
       onHorizontalDragCancel: _onDragCancel,
-      onHorizontalDragEnd: (_) => _onDragCancel(),
+      onHorizontalDragEnd: (_) => _onDragEnd(),
       child: Stack(
         children: [
           Positioned(
@@ -141,38 +158,98 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
     _resetDrag();
   }
 
-  DragAxis _lastAxis = DragAxis.empty;
+  void _onDragEnd() {
+    _processEndEvent();
+
+    _resetDrag();
+  }
+
+  void _processEndEvent() {
+    if (widget.endConfig == null) return;
+
+    final dragDirection = _getDragDirection();
+    final dragRange = (_lastPosition - dragStartPos).abs();
+
+    switch (dragDirection) {
+      case DragDirection.up:
+        if (widget.endConfig!.endBottomToTop == null) return;
+
+        final threshold = widget.endConfig!.endBottomToTop!.dragThreshold;
+
+        if (dragRange >= threshold) {
+          widget.endConfig!.endBottomToTop!.onDragEnd?.call();
+        }
+        break;
+      case DragDirection.down:
+        if (widget.endConfig!.endTopToBottom == null) return;
+
+        final threshold = widget.endConfig!.endTopToBottom!.dragThreshold;
+
+        if (dragRange >= threshold) {
+          widget.endConfig!.endTopToBottom!.onDragEnd?.call();
+        }
+
+        break;
+      case DragDirection.left:
+        if (widget.endConfig!.endRightToLeft == null) return;
+
+        final threshold = widget.endConfig!.endRightToLeft!.dragThreshold;
+
+        if (dragRange >= threshold) {
+          widget.endConfig!.endRightToLeft!.onDragEnd?.call();
+        }
+        break;
+      case DragDirection.right:
+        if (widget.endConfig!.endLeftToRight == null) return;
+
+        final threshold = widget.endConfig!.endLeftToRight!.dragThreshold;
+
+        if (dragRange >= threshold) {
+          widget.endConfig!.endLeftToRight!.onDragEnd?.call();
+        }
+        break;
+    }
+  }
+
+  DragAxis _draggingAxis = DragAxis.empty;
+  double _lastPosition = 0.0;
 
   /// 드래그 업데이트
   void _onDragUpdate(
     DragAxis axis,
     double position,
   ) {
-    if (_lastAxis != axis) {
+    if (_draggingAxis != axis) {
       _resetDrag();
-      _lastAxis = axis;
+      _draggingAxis = axis;
       dragStartPos = position;
     }
+    _lastPosition = position;
+    print('dragStartPos: $dragStartPos');
 
-    final dragDiff = position - dragStartPos;
+    final dragDiff = _lastPosition - dragStartPos;
+
+    _actionDragEvent(dragDiff);
+  }
+
+  DragDirection _getDragDirection() {
+    final dragDiff = _lastPosition - dragStartPos;
 
     bool isPositive = dragDiff > 0;
 
-    _actionDragEvent(dragDiff, isPositive);
+    if (_draggingAxis == DragAxis.vertical) {
+      return isPositive ? DragDirection.down : DragDirection.up;
+    } else {
+      return isPositive ? DragDirection.right : DragDirection.left;
+    }
   }
 
-  void _actionDragEvent(double dragDiff, bool isPositive) {
+  void _actionDragEvent(double dragDiff) {
     // 드래그 이벤트 방향과 드래그 거리 양수 음수로 방향 구분
 
     final dragRange = dragDiff.abs();
 
-    late DragDirection direction;
-
-    if (_lastAxis == DragAxis.vertical) {
-      direction = isPositive ? DragDirection.down : DragDirection.up;
-    } else {
-      direction = isPositive ? DragDirection.right : DragDirection.left;
-    }
+    DragDirection direction = _getDragDirection();
 
     _processWidgetMove(direction, dragRange);
     _processWidgetZoom(direction, dragRange);
@@ -327,7 +404,8 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
 
   void _initDragProperties() {
     setState(() {
-      _lastAxis = DragAxis.empty;
+      _draggingAxis = DragAxis.empty;
+      _lastPosition = 0;
       dragStartPos = 0;
     });
   }

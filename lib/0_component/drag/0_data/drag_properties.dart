@@ -13,7 +13,7 @@ class DragZoomProperties {
   /// 최대로 확대/축소되는 지점
   final double dragThreshold;
 
-  DragZoomProperties({
+  const DragZoomProperties({
     required this.type,
     required this.scaleLimit,
     required this.dragThreshold,
@@ -39,7 +39,7 @@ class DragMoveProperties {
   /// 최대로 드래그되는 지점
   final double dragThreshold;
 
-  DragMoveProperties({
+  const DragMoveProperties({
     this.direction = DragDirection.down,
     required this.dragThreshold,
   });
@@ -49,4 +49,16 @@ enum DragAxis {
   empty,
   vertical,
   horizontal,
+}
+
+class DragEndProperties {
+  final DragDirection direction;
+  final double dragThreshold;
+  final Function()? onDragEnd;
+
+  const DragEndProperties({
+    required this.direction,
+    required this.dragThreshold,
+    this.onDragEnd,
+  });
 }
