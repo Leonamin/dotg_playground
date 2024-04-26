@@ -53,21 +53,6 @@ class DragZoomConfig {
   });
 }
 
-/// 잘못만듦
-class DragEndConfig {
-  final DragEndEventConfig? endTopToBottom;
-  final DragEndEventConfig? endBottomToTop;
-  final DragEndEventConfig? endLeftToRight;
-  final DragEndEventConfig? endRightToLeft;
-
-  const DragEndConfig({
-    this.endTopToBottom,
-    this.endBottomToTop,
-    this.endLeftToRight,
-    this.endRightToLeft,
-  });
-}
-
 /// 위젯을 특정 방향으로 드래그
 class DragTransitionWidget extends StatefulWidget {
   final DragZoomConfig? zoomConfig;
