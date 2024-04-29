@@ -322,44 +322,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   }
 }
 
-class SizeFactorBox extends StatelessWidget {
-  // min 0.0 max 1.0
-  final double? heightSizeFactor;
-  final double? widthSizeFactor;
-  final double? height;
-  final double? width;
-  final Widget child;
-
-  const SizeFactorBox({
-    super.key,
-    this.heightSizeFactor,
-    this.widthSizeFactor,
-    this.height,
-    this.width,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final height = heightSizeFactor != null
-            ? constraints.maxHeight * heightSizeFactor!
-            : this.height;
-        final width = widthSizeFactor != null
-            ? constraints.maxWidth * widthSizeFactor!
-            : this.width;
-
-        return SizedBox(
-          height: height,
-          width: width,
-          child: child,
-        );
-      },
-    );
-  }
-}
-
 class _VideoContent extends StatelessWidget {
   final YoutubePlayerController vc;
   final double ratio;
