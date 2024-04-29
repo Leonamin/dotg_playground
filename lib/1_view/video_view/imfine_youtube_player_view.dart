@@ -1,3 +1,4 @@
+import 'package:dotg_playground/0_component/animation/animated_skip_widget.dart';
 import 'package:dotg_playground/0_component/drag/0_data/drag_properties.dart';
 import 'package:dotg_playground/0_component/drag/drag_transition_widget.dart';
 import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
@@ -21,6 +22,7 @@ class ImfineYoutubePlayerView extends StatefulWidget {
 
 class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
     with WidgetsBindingObserver {
+  late final AnimatedSkipController _skipAc = AnimatedSkipController();
   late YoutubePlayerController _vc;
 
   bool _isFullScreen = false;
@@ -29,6 +31,8 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   DateTime _lastUserInteraction =
       DateTime.now().subtract(_userInteractionTimeout);
+
+  DateTime _lastFastForward = DateTime.now().subtract(_userInteractionTimeout);
 
   static const Duration _userInteractionTimeout = Duration(seconds: 1);
 
@@ -135,12 +139,14 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
               ],
               onLongPressStart: _onLongPressStart,
               onLongPressEnd: _onLongPressEnd,
+              onTapDoubleDown: _onTapDoubleDown,
               child: SizedBox(
                 width: widgetWidth,
                 height: widgetHeight,
                 child: Center(
                   child: _VideoContent(
                     vc: _vc,
+                    skipAc: _skipAc,
                     ratio: _getRatio(_isFullScreen),
                     isFullScreen: _isFullScreen,
                     isSpeedUp: _isSpeedUp,
@@ -286,10 +292,31 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
       _isSpeedUp = false;
     });
   }
+
+  // 빨리 감기
+  void _onTapDoubleDown(TapDownDetails details) {
+    if (!_isAfterUserInteraction(DateTime.now())) return;
+
+    final halfWidth = MediaQuery.of(context).size.width / 2;
+    details.globalPosition.dx < halfWidth ? _onRewind() : _onFastForward();
+  }
+
+  void _onFastForward() {
+    _skipAc.animateFastForward();
+    _lastFastForward = DateTime.now();
+    _vc.seekTo(_vc.value.position + const Duration(seconds: 10));
+  }
+
+  void _onRewind() {
+    _skipAc.animateRewind();
+    _lastFastForward = DateTime.now();
+    _vc.seekTo(_vc.value.position - const Duration(seconds: 10));
+  }
 }
 
 class _VideoContent extends StatelessWidget {
   final YoutubePlayerController vc;
+  final AnimatedSkipController skipAc;
 
   final double ratio;
   final Color? progressIndicatorColor;
@@ -301,6 +328,7 @@ class _VideoContent extends StatelessWidget {
 
   const _VideoContent({
     required this.vc,
+    required this.skipAc,
     required this.ratio,
     required this.isFullScreen,
     required this.isSpeedUp,
@@ -351,6 +379,15 @@ class _VideoContent extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               child: const _SpeedUpIndicator(),
             ),
+          ),
+        ),
+        Positioned.fill(
+          top: 0,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: AnimatedSkipWidget(
+            controller: skipAc,
           ),
         ),
       ],

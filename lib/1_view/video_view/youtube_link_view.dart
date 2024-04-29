@@ -1,3 +1,4 @@
+import 'package:dotg_playground/0_component/animation/animated_skip_widget.dart';
 import 'package:dotg_playground/1_view/video_view/imfine_youtube_player_view.dart';
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -64,6 +65,8 @@ class YoutubeTestView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ac = AnimatedSkipController();
+
     TextEditingController tc = TextEditingController();
     return Scaffold(
       appBar: AppBar(),
@@ -72,6 +75,22 @@ class YoutubeTestView extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // FastForwardIconsWidget(),
+              GestureDetector(
+                onDoubleTapDown: (details) {
+                  final halfWidth = MediaQuery.of(context).size.width / 2;
+                  details.globalPosition.dx < halfWidth
+                      ? ac.animateRewind()
+                      : ac.animateFastForward();
+                },
+                child: SizedBox(
+                  height: 300,
+                  width: double.infinity,
+                  child: AnimatedSkipWidget(
+                    controller: ac,
+                  ),
+                ),
+              ),
               TextField(
                 controller: tc,
               ),

@@ -60,6 +60,7 @@ class DragTransitionWidget extends StatefulWidget {
   final List<DragEndEventConfig> dragEndEvents;
   final Function(LongPressStartDetails)? onLongPressStart;
   final Function(LongPressEndDetails)? onLongPressEnd;
+  final Function(TapDownDetails)? onTapDoubleDown;
 
   final bool enableMove;
   final bool enableZoom;
@@ -76,6 +77,7 @@ class DragTransitionWidget extends StatefulWidget {
     this.onLongPressEnd,
     this.enableMove = true,
     this.enableZoom = true,
+    this.onTapDoubleDown,
     required this.child,
   });
 
@@ -110,6 +112,7 @@ class _DragTransitionWidgetState extends State<DragTransitionWidget> {
       onHorizontalDragEnd: (_) => _onDragEnd(),
       onLongPressStart: widget.onLongPressStart,
       onLongPressEnd: widget.onLongPressEnd,
+      onDoubleTapDown: widget.onTapDoubleDown,
       child: Stack(
         children: [
           Positioned(
