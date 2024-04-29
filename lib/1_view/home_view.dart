@@ -69,13 +69,8 @@ class HomeView extends StatelessWidget {
             ),
             const _NavigatorButton(
                 text: 'BottomSliverView', page: BottomSliverView()),
-            const _NavigatorButton(text: 'RunJsView', page: RunJsView()),
-            const _NavigatorButton(text: 'RunJsView', page: RunJsView()),
             const _NavigatorButton(
-                text: 'YoutubeLinkView',
-                page: ImfineYoutubePlayerView(
-                  videoUrl: 'https://youtu.be/fD8Yj4kNh50',
-                )),
+                text: 'YoutubeLinkView', page: YoutubeTestView()),
             const _NavigatorButton(text: 'DragTest', page: DragTestView()),
           ],
         ),

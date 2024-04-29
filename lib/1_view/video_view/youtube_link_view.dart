@@ -63,6 +63,69 @@ class ImfineYoutubeThumbnailView extends StatelessWidget {
   }
 }
 
+class YoutubeTestView extends StatelessWidget {
+  const YoutubeTestView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    TextEditingController tc = TextEditingController();
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: tc,
+              ),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () {
+                  if (tc.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a video URL'),
+                      ),
+                    );
+                    return;
+                  }
+                  _onTapGoYoutube(context, tc.text);
+                },
+                child: const Text('Go Youtube'),
+              ),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () {
+                  _onTapGoMagnetic(context);
+                },
+                child: const Text('Go Magnetic'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onTapGoMagnetic(BuildContext context) {
+    _onTapGoYoutube(context, 'https://youtu.be/fD8Yj4kNh50');
+  }
+
+  void _onTapGoYoutube(BuildContext context, String videoUrl) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return ImfineYoutubePlayerView(
+            videoUrl: videoUrl,
+          );
+        },
+      ),
+    );
+  }
+}
+
 class ImfineYoutubePlayerView extends StatefulWidget {
   final String videoUrl;
 
@@ -190,6 +253,8 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
                   onDragEnd: () => _onActionDragUp(context),
                 ),
               ],
+              onLongPressStart: _onLongPressStart,
+              onLongPressEnd: _onLongPressEnd,
               child: SizedBox(
                 width: widgetWidth,
                 height: widgetHeight,
@@ -198,6 +263,7 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
                     vc: _vc,
                     ratio: _getRatio(_isFullScreen),
                     isFullScreen: _isFullScreen,
+                    isSpeedUp: _isSpeedUp,
                     onTapFullScreen: _onTapFullScreen,
                   ),
                 ),
@@ -320,53 +386,92 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
       overlays: [],
     );
   }
+
+  ///  배속 관련
+  double _lastPlaybackRate = PlaybackRate.normal;
+
+  bool _isSpeedUp = false;
+
+  void _onLongPressStart(LongPressStartDetails details) {
+    _lastPlaybackRate = _vc.value.playbackRate;
+    _vc.setPlaybackRate(PlaybackRate.twice);
+    setState(() {
+      _isSpeedUp = true;
+    });
+  }
+
+  void _onLongPressEnd(LongPressEndDetails details) {
+    _vc.setPlaybackRate(_lastPlaybackRate);
+    setState(() {
+      _isSpeedUp = false;
+    });
+  }
 }
 
 class _VideoContent extends StatelessWidget {
   final YoutubePlayerController vc;
-  final double ratio;
-  final bool isFullScreen;
-  final VoidCallback onTapFullScreen;
 
+  final double ratio;
   final Color? progressIndicatorColor;
+
+  final bool isFullScreen;
+  final bool isSpeedUp;
+
+  final VoidCallback onTapFullScreen;
 
   const _VideoContent({
     required this.vc,
     required this.ratio,
     required this.isFullScreen,
+    required this.isSpeedUp,
     required this.onTapFullScreen,
     this.progressIndicatorColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return YoutubePlayer(
-      controller: vc,
-      aspectRatio: ratio,
-      showVideoProgressIndicator: true,
-      progressIndicatorColor: progressIndicatorColor ?? Colors.blue,
-      progressColors: ProgressBarColors(
-        playedColor: progressIndicatorColor ?? Colors.blue,
-        handleColor: progressIndicatorColor ?? Colors.blue,
-        backgroundColor: Colors.black12,
-      ),
-      bottomActions: [
-        const SizedBox(width: 14.0),
-        CurrentPosition(),
-        const SizedBox(width: 8.0),
-        ProgressBar(
-          isExpanded: true,
-          colors: ProgressBarColors(
+    return Stack(
+      children: [
+        YoutubePlayer(
+          controller: vc,
+          aspectRatio: ratio,
+          showVideoProgressIndicator: true,
+          progressIndicatorColor: progressIndicatorColor ?? Colors.blue,
+          progressColors: ProgressBarColors(
             playedColor: progressIndicatorColor ?? Colors.blue,
             handleColor: progressIndicatorColor ?? Colors.blue,
             backgroundColor: Colors.black12,
           ),
+          bottomActions: [
+            const SizedBox(width: 14.0),
+            CurrentPosition(),
+            const SizedBox(width: 8.0),
+            ProgressBar(
+              isExpanded: true,
+              colors: ProgressBarColors(
+                playedColor: progressIndicatorColor ?? Colors.blue,
+                handleColor: progressIndicatorColor ?? Colors.blue,
+                backgroundColor: Colors.black12,
+              ),
+            ),
+            RemainingDuration(),
+            const PlaybackSpeedButton(),
+            _FullScreenButton(
+              isFullScreen: isFullScreen,
+              onTap: onTapFullScreen,
+            ),
+          ],
         ),
-        RemainingDuration(),
-        const PlaybackSpeedButton(),
-        _FullScreenButton(
-          isFullScreen: isFullScreen,
-          onTap: onTapFullScreen,
+        Positioned.fill(
+          top: 8,
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: AnimatedOpacity(
+              opacity: isSpeedUp ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: const _SpeedUpIndicator(),
+            ),
+          ),
         ),
       ],
     );
@@ -392,6 +497,46 @@ class _FullScreenButton extends StatelessWidget {
         color: color ?? Colors.white,
       ),
       onPressed: onTap,
+    );
+  }
+}
+
+class _SpeedUpIndicator extends StatelessWidget {
+  const _SpeedUpIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: 8.0,
+          vertical: 4.0,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.fast_forward,
+              color: Colors.white,
+              size: 14.0,
+            ),
+            SizedBox(width: 8.0),
+            Text(
+              '2.0x',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.0,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
