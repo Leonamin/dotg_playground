@@ -4,7 +4,6 @@ import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors/sensors.dart';
-import 'package:throttling/throttling.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class ImfineYoutubeThumbnailView extends StatelessWidget {
@@ -85,7 +84,10 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   double _lastAccelerometerX = 0.0;
 
-  final thr = Throttling<void>(duration: const Duration(milliseconds: 1000));
+  DateTime _lastUserInteraction =
+      DateTime.now().subtract(_userInteractionTimeout);
+
+  static const Duration _userInteractionTimeout = Duration(seconds: 1);
 
   @override
   void initState() {
@@ -103,13 +105,7 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
     OrientationUtil.enableOrientationAll();
 
-    accelerometerEvents.listen((AccelerometerEvent event) {
-      _lastAccelerometerX = event.x;
-
-      if (!_isFullScreen) return;
-
-      _setFullScreen(true);
-    });
+    accelerometerEvents.listen(_onListenAccelerometer);
   }
 
   /// 현재화면에서 앱 밖으로 나갔을 때, 시스템 UI가 보이도록 설정
@@ -220,9 +216,25 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
     super.dispose();
   }
 
+  void _onListenAccelerometer(AccelerometerEvent event) {
+    _lastAccelerometerX = event.x;
+
+    // 가로모드가 아닌 경우 무시
+    if (!_isFullScreen) return;
+
+    if (!_isAfterUserInteraction(DateTime.now())) return;
+
+    _setFullScreen(true);
+  }
+
+  bool _isAfterUserInteraction(DateTime dt) {
+    return dt.isAfter(_lastUserInteraction.add(_userInteractionTimeout));
+  }
+
   void _onActionBack(BuildContext context) {
     if (_isFullScreen) {
-      _setFullScreen(false, setForce: true);
+      _lastUserInteraction = DateTime.now();
+      _setFullScreen(false);
     } else {
       Navigator.of(context).pop();
     }
@@ -230,25 +242,16 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   void _onActionDragUp(BuildContext context) {
     if (!_isFullScreen) {
-      _setFullScreen(true, setForce: true);
+      _lastUserInteraction = DateTime.now();
+      _setFullScreen(true);
     }
   }
 
-  void _setFullScreen(bool fullScreen, {bool setForce = false}) {
-    if (setForce) {
-      if (fullScreen) {
-        _setLandscape();
-      } else {
-        _setPortrait();
-      }
+  void _setFullScreen(bool fullScreen) {
+    if (fullScreen) {
+      _setLandscape();
     } else {
-      thr.throttle(() {
-        if (fullScreen) {
-          _setLandscape();
-        } else {
-          _setPortrait();
-        }
-      });
+      _setPortrait();
     }
   }
 
@@ -277,6 +280,8 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   }
 
   void _onTapFullScreen() {
+    _lastUserInteraction = DateTime.now();
+
     if (_isFullScreen) {
       _setPortrait();
     } else {
