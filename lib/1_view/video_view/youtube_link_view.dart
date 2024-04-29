@@ -147,7 +147,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
       final moveUpThreshold = MediaQuery.of(context).size.height / 10;
       final moveDownThreshold = MediaQuery.of(context).size.height / 3;
-      print(moveDownThreshold);
       final zoomInThreshold = MediaQuery.of(context).size.height / 6;
 
       return PopScope(
@@ -222,7 +221,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   }
 
   void _onActionBack(BuildContext context) {
-    print('onActionBack: $_isFullScreen');
     if (_isFullScreen) {
       _setFullScreen(false, setForce: true);
     } else {
@@ -231,7 +229,6 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   }
 
   void _onActionDragUp(BuildContext context) {
-    print('onActionDragUp: $_isFullScreen');
     if (!_isFullScreen) {
       _setFullScreen(true, setForce: true);
     }
@@ -377,7 +374,6 @@ class _VideoContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return YoutubePlayer(
-      key: key,
       controller: vc,
       aspectRatio: ratio,
       showVideoProgressIndicator: true,
