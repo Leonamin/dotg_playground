@@ -1,6 +1,6 @@
 part of '../imfine_youtube_player_view.dart';
 
-class _VideoContent extends StatelessWidget {
+class ImfineYoutubePlayer extends StatelessWidget {
   final YoutubePlayerController vc;
   final AnimatedSkipController skipAc;
 
@@ -12,7 +12,8 @@ class _VideoContent extends StatelessWidget {
 
   final VoidCallback onTapFullScreen;
 
-  const _VideoContent({
+  const ImfineYoutubePlayer({
+    super.key,
     required this.vc,
     required this.skipAc,
     required this.ratio,

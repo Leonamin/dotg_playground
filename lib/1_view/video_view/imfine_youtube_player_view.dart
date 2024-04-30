@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:sensors/sensors.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-part '0_component/video_content.dart';
+part '0_component/imfine_youtube_player.dart';
 
 class ImfineYoutubePlayerView extends StatefulWidget {
   final String videoUrl;
@@ -164,7 +164,7 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
                 width: widgetWidth,
                 height: widgetHeight,
                 child: Center(
-                  child: _VideoContent(
+                  child: ImfineYoutubePlayer(
                     vc: _vc,
                     skipAc: _skipAc,
                     ratio: _getRatio(_isFullScreen),
