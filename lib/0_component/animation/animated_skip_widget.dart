@@ -1,3 +1,4 @@
+import 'package:dotg_playground/1_view/video_view/0_component/from_to.dart';
 import 'package:flutter/material.dart';
 
 class CustomQuadCurve extends Curve {
@@ -222,13 +223,6 @@ class _AnimatedSkipWidgetState extends State<AnimatedSkipWidget>
   void _closeController() {
     ac.dispose();
   }
-}
-
-class FromTo {
-  final double from;
-  final double to;
-
-  const FromTo(this.from, this.to);
 }
 
 class AnimatedLinearOpacity extends StatelessWidget {

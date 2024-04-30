@@ -1,6 +1,7 @@
 import 'package:dotg_playground/0_component/animation/animated_skip_widget.dart';
 import 'package:dotg_playground/0_component/drag/0_data/drag_properties.dart';
 import 'package:dotg_playground/0_component/drag/drag_transition_widget.dart';
+import 'package:dotg_playground/1_view/video_view/0_component/from_to.dart';
 import 'package:dotg_playground/1_view/video_view/orientation_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,9 +13,25 @@ part '0_component/video_content.dart';
 class ImfineYoutubePlayerView extends StatefulWidget {
   final String videoUrl;
 
+  /// 빨리감기, 되감기 시간
+  final Duration skipDuration;
+
+  /// 전체 너비 중 되감기 영역의 비율
+  final FromTo rewindAreaFactor;
+
+  /// 전체 너비 중 빨리감기 영역의 비율
+  final FromTo fastForwardAreaFactor;
+
+  /// 사용자 터치 무시하는 타임아웃
+  final Duration userInteractionTimeout;
+
   const ImfineYoutubePlayerView({
     super.key,
     required this.videoUrl,
+    this.skipDuration = const Duration(seconds: 10),
+    this.rewindAreaFactor = const FromTo(0.0, 0.4),
+    this.fastForwardAreaFactor = const FromTo(0.6, 1.0),
+    this.userInteractionTimeout = const Duration(seconds: 1),
   });
 
   @override
@@ -31,13 +48,13 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   double _lastAccelerometerX = 0.0;
 
-  DateTime _lastUserInteraction =
+  late DateTime _lastUserInteraction =
       DateTime.now().subtract(_userInteractionTimeout);
 
-  static const Duration _userInteractionTimeout = Duration(seconds: 1);
+  Duration get _userInteractionTimeout => widget.userInteractionTimeout;
 
-  FromTo get _rewindAreaFactor => const FromTo(0.0, 0.4);
-  FromTo get _fastForwardAreaFactor => const FromTo(0.6, 1.0);
+  FromTo get _rewindAreaFactor => widget.rewindAreaFactor;
+  FromTo get _fastForwardAreaFactor => widget.fastForwardAreaFactor;
 
   @override
   void initState() {
@@ -331,11 +348,11 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
 
   void _onFastForward() {
     _skipAc.animateFastForward();
-    _vc.seekTo(_vc.value.position + const Duration(seconds: 10));
+    _vc.seekTo(_vc.value.position + widget.skipDuration);
   }
 
   void _onRewind() {
     _skipAc.animateRewind();
-    _vc.seekTo(_vc.value.position - const Duration(seconds: 10));
+    _vc.seekTo(_vc.value.position - widget.skipDuration);
   }
 }
