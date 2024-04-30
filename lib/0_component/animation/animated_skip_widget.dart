@@ -53,7 +53,7 @@ class AnimatedSkipWidget extends StatefulWidget {
     required this.controller,
     this.backgroundColor,
     this.fastForwardColor,
-    this.duration,
+    this.duration = const Duration(milliseconds: 1000),
   });
 
   @override
@@ -240,15 +240,25 @@ class AnimatedLinearOpacity extends StatelessWidget {
     super.key,
     this.progress = 0.0,
     this.forwardStatus = const [
-      FromTo(0.0, 0.45),
-      FromTo(0.3, 0.70),
-      FromTo(0.55, 1.0),
+      FromTo(0.0, 0.75),
+      FromTo(0.125, 0.875),
+      FromTo(0.25, 1.0),
     ],
     this.iconColor,
   });
 
-  double getOpacityForIcon(double start, double end) {
-    double opacity = (progress - start) / (end - start);
+  /// 2차함수 그래프를 이용하여 투명도를 계산
+  double getParabolicOpacity(double progress, double start, double end) {
+    if (progress < start || progress > end) {
+      return 0.0;
+    }
+    double mid = (start + end) / 2; // 최대값 1.0이 되는 중간 지점
+    // 2차 함수를 구현 (정점 형식)
+    double opacity = -4 /
+            ((end - start) * (end - start)) *
+            (progress - mid) *
+            (progress - mid) +
+        1;
     return opacity.clamp(0.0, 1.0);
   }
 
@@ -261,7 +271,7 @@ class AnimatedLinearOpacity extends StatelessWidget {
         children: [
           for (final fromTo in forwardStatus)
             Opacity(
-              opacity: getOpacityForIcon(fromTo.from, fromTo.to),
+              opacity: getParabolicOpacity(progress, fromTo.from, fromTo.to),
               child: _PlayIconWidget(
                 color: iconColor,
               ),
