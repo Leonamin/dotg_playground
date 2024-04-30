@@ -170,6 +170,8 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
                     ratio: _getRatio(_isFullScreen),
                     isFullScreen: _isFullScreen,
                     isSpeedUp: _isSpeedUp,
+                    fastForwardText: '${widget.skipDuration.inSeconds}초',
+                    rewindText: '-${widget.skipDuration.inSeconds}초',
                     onTapFullScreen: _onTapFullScreen,
                   ),
                 ),

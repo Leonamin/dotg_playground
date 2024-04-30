@@ -44,10 +44,15 @@ class AnimatedSkipController extends ChangeNotifier {
 
 class AnimatedSkipWidget extends StatefulWidget {
   final AnimatedSkipController controller;
+  final Duration duration;
+
   final Color? backgroundColor;
   final Color? fastForwardColor;
 
-  final Duration? duration;
+  final TextStyle textStyle;
+
+  final String? fastForwardText;
+  final String? rewindText;
 
   const AnimatedSkipWidget({
     super.key,
@@ -55,6 +60,9 @@ class AnimatedSkipWidget extends StatefulWidget {
     this.backgroundColor,
     this.fastForwardColor,
     this.duration = const Duration(milliseconds: 1000),
+    this.fastForwardText,
+    this.rewindText,
+    this.textStyle = const TextStyle(fontSize: 16, color: Colors.white),
   });
 
   @override
@@ -72,6 +80,10 @@ class _AnimatedSkipWidgetState extends State<AnimatedSkipWidget>
 
   double get _splashCircleSize => MediaQuery.of(context).size.width * 3;
 
+  String get _fastForwardText => widget.fastForwardText ?? '빨리감기';
+
+  String get _rewindText => widget.rewindText ?? '뒤로감기';
+
   @override
   void initState() {
     super.initState();
@@ -83,7 +95,7 @@ class _AnimatedSkipWidgetState extends State<AnimatedSkipWidget>
   void _initAnimation() {
     ac = AnimationController(
       vsync: this,
-      duration: widget.duration ?? const Duration(milliseconds: 500),
+      duration: widget.duration,
     );
 
     _splashOpacityTween = Tween<double>(begin: 0.0, end: 0.5).animate(
@@ -188,12 +200,23 @@ class _AnimatedSkipWidgetState extends State<AnimatedSkipWidget>
                   left: 0,
                   right: halfWidth,
                   bottom: 0,
-                  child: Transform.flip(
-                    flipX: true,
-                    child: AnimatedLinearOpacity(
-                      progress: _fastForwardTween.value,
-                      iconColor: Colors.white,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Transform.flip(
+                        flipX: true,
+                        child: AnimatedLinearOpacity(
+                          progress: _fastForwardTween.value,
+                          iconColor: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _rewindText,
+                        style: widget.textStyle,
+                      ),
+                    ],
                   ),
                 ),
               if (_showFastForward)
@@ -202,9 +225,20 @@ class _AnimatedSkipWidgetState extends State<AnimatedSkipWidget>
                   left: halfWidth,
                   right: 0,
                   bottom: 0,
-                  child: AnimatedLinearOpacity(
-                    progress: _fastForwardTween.value,
-                    iconColor: Colors.white,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedLinearOpacity(
+                        progress: _fastForwardTween.value,
+                        iconColor: Colors.white,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _fastForwardText,
+                        style: widget.textStyle,
+                      ),
+                    ],
                   ),
                 ),
             ],

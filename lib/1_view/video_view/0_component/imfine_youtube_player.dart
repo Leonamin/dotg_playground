@@ -10,6 +10,9 @@ class ImfineYoutubePlayer extends StatelessWidget {
   final bool isFullScreen;
   final bool isSpeedUp;
 
+  final String? fastForwardText;
+  final String? rewindText;
+
   final VoidCallback onTapFullScreen;
 
   const ImfineYoutubePlayer({
@@ -20,6 +23,8 @@ class ImfineYoutubePlayer extends StatelessWidget {
     required this.isFullScreen,
     required this.isSpeedUp,
     required this.onTapFullScreen,
+    this.fastForwardText,
+    this.rewindText,
     this.progressIndicatorColor,
   });
 
@@ -75,8 +80,12 @@ class ImfineYoutubePlayer extends StatelessWidget {
           bottom: 0,
           left: 0,
           right: 0,
-          child: AnimatedSkipWidget(
-            controller: skipAc,
+          child: IgnorePointer(
+            child: AnimatedSkipWidget(
+              controller: skipAc,
+              fastForwardText: fastForwardText,
+              rewindText: rewindText,
+            ),
           ),
         ),
       ],
