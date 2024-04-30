@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:sensors/sensors.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
+part '0_component/video_content.dart';
+
 class ImfineYoutubePlayerView extends StatefulWidget {
   final String videoUrl;
 
@@ -32,9 +34,10 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   DateTime _lastUserInteraction =
       DateTime.now().subtract(_userInteractionTimeout);
 
-  DateTime _lastFastForward = DateTime.now().subtract(_userInteractionTimeout);
-
   static const Duration _userInteractionTimeout = Duration(seconds: 1);
+
+  FromTo get _rewindAreaFactor => const FromTo(0.0, 0.4);
+  FromTo get _fastForwardAreaFactor => const FromTo(0.6, 1.0);
 
   @override
   void initState() {
@@ -297,163 +300,42 @@ class _ImfineYoutubePlayerViewState extends State<ImfineYoutubePlayerView>
   void _onTapDoubleDown(TapDownDetails details) {
     if (!_isAfterUserInteraction(DateTime.now())) return;
 
-    final halfWidth = MediaQuery.of(context).size.width / 2;
-    details.globalPosition.dx < halfWidth ? _onRewind() : _onFastForward();
+    final touchX = details.globalPosition.dx;
+
+    if (_isInRewindArea(touchX)) {
+      _onRewind();
+    }
+
+    if (_isInFastForwardArea(touchX)) {
+      _onFastForward();
+    }
+  }
+
+  bool _isInRewindArea(double x) {
+    final rewindAreaStart =
+        MediaQuery.of(context).size.width * _rewindAreaFactor.from;
+    final rewindAreaEnd =
+        MediaQuery.of(context).size.width * _rewindAreaFactor.to;
+
+    return x >= rewindAreaStart && x <= rewindAreaEnd;
+  }
+
+  bool _isInFastForwardArea(double x) {
+    final fastForwardAreaStart =
+        MediaQuery.of(context).size.width * _fastForwardAreaFactor.from;
+    final fastForwardAreaEnd =
+        MediaQuery.of(context).size.width * _fastForwardAreaFactor.to;
+
+    return x >= fastForwardAreaStart && x <= fastForwardAreaEnd;
   }
 
   void _onFastForward() {
     _skipAc.animateFastForward();
-    _lastFastForward = DateTime.now();
     _vc.seekTo(_vc.value.position + const Duration(seconds: 10));
   }
 
   void _onRewind() {
     _skipAc.animateRewind();
-    _lastFastForward = DateTime.now();
     _vc.seekTo(_vc.value.position - const Duration(seconds: 10));
-  }
-}
-
-class _VideoContent extends StatelessWidget {
-  final YoutubePlayerController vc;
-  final AnimatedSkipController skipAc;
-
-  final double ratio;
-  final Color? progressIndicatorColor;
-
-  final bool isFullScreen;
-  final bool isSpeedUp;
-
-  final VoidCallback onTapFullScreen;
-
-  const _VideoContent({
-    required this.vc,
-    required this.skipAc,
-    required this.ratio,
-    required this.isFullScreen,
-    required this.isSpeedUp,
-    required this.onTapFullScreen,
-    this.progressIndicatorColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        YoutubePlayer(
-          controller: vc,
-          aspectRatio: ratio,
-          showVideoProgressIndicator: true,
-          progressIndicatorColor: progressIndicatorColor ?? Colors.blue,
-          progressColors: ProgressBarColors(
-            playedColor: progressIndicatorColor ?? Colors.blue,
-            handleColor: progressIndicatorColor ?? Colors.blue,
-            backgroundColor: Colors.black12,
-          ),
-          bottomActions: [
-            const SizedBox(width: 14.0),
-            CurrentPosition(),
-            const SizedBox(width: 8.0),
-            ProgressBar(
-              isExpanded: true,
-              colors: ProgressBarColors(
-                playedColor: progressIndicatorColor ?? Colors.blue,
-                handleColor: progressIndicatorColor ?? Colors.blue,
-                backgroundColor: Colors.black12,
-              ),
-            ),
-            RemainingDuration(),
-            const PlaybackSpeedButton(),
-            _FullScreenButton(
-              isFullScreen: isFullScreen,
-              onTap: onTapFullScreen,
-            ),
-          ],
-        ),
-        Positioned.fill(
-          top: 8,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: AnimatedOpacity(
-              opacity: isSpeedUp ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: const _SpeedUpIndicator(),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          top: 0,
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: AnimatedSkipWidget(
-            controller: skipAc,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FullScreenButton extends StatelessWidget {
-  final bool isFullScreen;
-  final VoidCallback? onTap;
-  final Color? color;
-
-  const _FullScreenButton({
-    required this.isFullScreen,
-    this.color,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(
-        isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
-        color: color ?? Colors.white,
-      ),
-      onPressed: onTap,
-    );
-  }
-}
-
-class _SpeedUpIndicator extends StatelessWidget {
-  const _SpeedUpIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 8.0,
-          vertical: 4.0,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.fast_forward,
-              color: Colors.white,
-              size: 14.0,
-            ),
-            SizedBox(width: 8.0),
-            Text(
-              '2.0x',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14.0,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
