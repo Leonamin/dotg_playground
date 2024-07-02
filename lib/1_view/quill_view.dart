@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
 class QuillView extends StatelessWidget {
@@ -44,7 +42,6 @@ class QuillView extends StatelessWidget {
                   child: QuillEditor.basic(
                     configurations: QuillEditorConfigurations(
                       controller: _controller,
-                      readOnly: false,
                       sharedConfigurations: const QuillSharedConfigurations(
                         locale: Locale('kr'),
                       ),
