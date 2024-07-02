@@ -6,6 +6,7 @@ import 'package:dotg_playground/1_view/quill_view.dart';
 import 'package:dotg_playground/1_view/round_test_view.dart';
 import 'package:dotg_playground/1_view/run_js_view.dart';
 import 'package:dotg_playground/1_view/tab_indicator_view.dart';
+import 'package:dotg_playground/1_view/test/snap_scroll_test_view.dart';
 import 'package:dotg_playground/1_view/video_view/youtube_link_view.dart';
 import 'package:dotg_playground/3_util/navigator_helper.dart';
 import 'package:flutter/material.dart';
@@ -72,6 +73,7 @@ class HomeView extends StatelessWidget {
             const _NavigatorButton(
                 text: 'YoutubeLinkView', page: YoutubeTestView()),
             const _NavigatorButton(text: 'DragTest', page: DragTestView()),
+            const _NavigatorButton(text: 'RunJs', page: SnapScrollTestView()),
           ],
         ),
       ),
