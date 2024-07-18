@@ -20,31 +20,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// import 'package:flutter/material.dart';
-// import 'disable_screenshots.dart';
-
-// void main() {
-//   runApp(MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       home: Scaffold(
-//         appBar: AppBar(
-//           title: Text('Secure App'),
-//         ),
-//         body: Center(
-//           child: ElevatedButton(
-//             onPressed: () {
-//               DisableScreenshots.disable();
-//             },
-//             child: Text('Disable Screenshots'),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
