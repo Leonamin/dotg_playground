@@ -45,6 +45,10 @@ dependencies:
   flutter_inappwebview: ^6.0.0
   sensors: ^2.0.3
   throttling: ^2.0.1
+  go_router: ^14.2.1
+
+dependency_overrides:
+    webview_flutter_android: 3.16.1
 
 dev_dependencies:
   flutter_test:

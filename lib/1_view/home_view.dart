@@ -1,16 +1,6 @@
 import 'dart:io';
 
-import 'package:dotg_playground/1_view/bottom_sliver_view.dart';
-import 'package:dotg_playground/1_view/drag_test_view.dart';
-import 'package:dotg_playground/1_view/fuse_view.dart';
-import 'package:dotg_playground/1_view/looping_page_view.dart';
-import 'package:dotg_playground/1_view/quill_view.dart';
-import 'package:dotg_playground/1_view/round_test_view.dart';
-import 'package:dotg_playground/1_view/tab_indicator_view.dart';
-import 'package:dotg_playground/1_view/test/scroll_ensure_test_view.dart';
-import 'package:dotg_playground/1_view/test/snap_scroll_test_view.dart';
-import 'package:dotg_playground/1_view/video_view/youtube_link_view.dart';
-import 'package:dotg_playground/3_util/navigator_helper.dart';
+import 'package:dotg_playground/0_init/dotg_navigator.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatefulWidget {
@@ -40,57 +30,63 @@ class _HomeViewState extends State<HomeView> {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  NavigatorHelper.push(
-                    context,
-                    const LoopPageView('asd'),
-                  );
+                  DotgNavigator.navigateToLoopingTest(context);
                 },
                 child: const Text('Looping Page View'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  NavigatorHelper.push(
-                    context,
-                    const RoundTestView(),
-                  );
+                  DotgNavigator.navigateToRoundTest(context);
                 },
                 child: const Text('Round Test View'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  NavigatorHelper.push(
-                    context,
-                    const FuseView(),
-                  );
+                  DotgNavigator.navigateToFuseTest(context);
                 },
                 child: const Text('Fuse View'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  NavigatorHelper.push(
-                    context,
-                    QuillView(),
-                  );
+                  DotgNavigator.navigateToQuillTest(context);
                 },
                 child: const Text('Quill View'),
               ),
               ElevatedButton(
                 onPressed: () {
-                  NavigatorHelper.push(
-                    context,
-                    const TabIndicatorView(),
-                  );
+                  DotgNavigator.navigateToTabIndicatorTest(context);
                 },
                 child: const Text('TabIndicator View'),
               ),
-              const _NavigatorButton(
-                  text: 'BottomSliverView', page: BottomSliverView()),
-              const _NavigatorButton(
-                  text: 'YoutubeLinkView', page: YoutubeTestView()),
-              const _NavigatorButton(text: 'DragTest', page: DragTestView()),
-              const _NavigatorButton(text: 'RunJs', page: SnapScrollTestView()),
-              const _NavigatorButton(
-                  text: 'ScrollTest', page: ScrollEnsureTestView()),
+              _NavigatorButton(
+                text: 'BottomSliverView',
+                onTap: () {
+                  DotgNavigator.navigateToBottomSliverTest(context);
+                },
+              ),
+              _NavigatorButton(
+                  text: 'YoutubeLinkView',
+                  onTap: () {
+                    DotgNavigator.navigateToYoutubePlayerTest(context);
+                  }),
+              _NavigatorButton(
+                text: 'DragTest',
+                onTap: () {
+                  DotgNavigator.navigateToDragTest(context);
+                },
+              ),
+              _NavigatorButton(
+                text: 'SnapScroll',
+                onTap: () {
+                  DotgNavigator.navigateToSnapScrollTest(context);
+                },
+              ),
+              _NavigatorButton(
+                text: 'ScrollTest',
+                onTap: () {
+                  DotgNavigator.navigateToScrollTest(context);
+                },
+              ),
             ],
           ),
         ),
@@ -115,22 +111,18 @@ class _HomeViewState extends State<HomeView> {
 
 class _NavigatorButton extends StatelessWidget {
   final String text;
-  final Widget page;
+  final VoidCallback onTap;
+
   const _NavigatorButton({
     super.key,
     required this.text,
-    required this.page,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
-        NavigatorHelper.push(
-          context,
-          page,
-        );
-      },
+      onPressed: onTap,
       child: Text(text),
     );
   }

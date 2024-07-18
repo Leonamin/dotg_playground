@@ -1,5 +1,5 @@
 import 'package:dotg_playground/0_component/animation/animated_skip_widget.dart';
-import 'package:dotg_playground/1_view/video_view/imfine_youtube_player_view.dart';
+import 'package:dotg_playground/0_init/dotg_common_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
@@ -116,6 +116,13 @@ class YoutubeTestView extends StatelessWidget {
                 },
                 child: const Text('Go Magnetic'),
               ),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () {
+                  _onTapGoSuperNatural(context);
+                },
+                child: const Text('Go SuperNatural'),
+              ),
             ],
           ),
         ),
@@ -127,16 +134,14 @@ class YoutubeTestView extends StatelessWidget {
     _onTapGoYoutube(context, 'https://youtu.be/fD8Yj4kNh50');
   }
 
-  void _onTapGoYoutube(BuildContext context, String videoUrl) {
-    Navigator.pushReplacement(
+  void _onTapGoSuperNatural(BuildContext context) {
+    _onTapGoYoutube(
       context,
-      MaterialPageRoute(
-        builder: (context) {
-          return ImfineYoutubePlayerView(
-            videoUrl: videoUrl,
-          );
-        },
-      ),
+      'https://www.youtube.com/shorts/IzSC6Yb8MfI?feature=share',
     );
+  }
+
+  void _onTapGoYoutube(BuildContext context, String videoUrl) {
+    DotgCommonNavigator.navigateToYoutubeLink(context, videoUrl: videoUrl);
   }
 }

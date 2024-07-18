@@ -1,4 +1,4 @@
-import 'package:dotg_playground/1_view/home_view.dart';
+import 'package:dotg_playground/0_init/route/router.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -10,13 +10,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: '땃쥐 놀이터',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomeView(),
+      routerConfig: router,
     );
   }
 }
